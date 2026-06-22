@@ -38,7 +38,7 @@ El objetivo de este proyecto es crear una plataforma de datos en tiempo real esc
 * Dar soporte a paneles de BI y a la elaboración de informes operativos.
 
 ________________________________________________________________________________________________________________________________________________________________________________________________________________
-🎯 Valor empresarial y capacidades técnicas
+## 🎯 Valor empresarial y capacidades técnicas
 ________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 **Valor Aportado**
@@ -64,6 +64,41 @@ ________________________________________________________________________________
 ________________________________________________________________________________________________________________________________________________________________________________________________________________
  
 ![Image](https://github.com/user-attachments/assets/aa9ce6c2-4a88-4f1b-bd71-d73ccc5f32aa)
+
+________________________________________________________________________________________________________________________________________________________________________________________________________________
+## 🛠️ Stack Tecnológico
+________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+**Infraestructura**
+
+| Componente |	Tecnología |	Versión |	Función |
+|------------|------------|---------|---------|
+| Orquestación |	Docker Compose |	3.8 |	Gestión de contenedores |
+| Streaming Broker |	Apache Kafka	| Latest (KRaft) |	Ingesta en tiempo real |
+| Procesamiento |	Apache Spark |	3.5.1 |	Procesamiento distribuido |
+| Almacenamiento |	Delta Lake |	3.2.0 |	Tablas ACID en Data Lake |
+| Metadatos |	Hive Metastore |	3.1.3	| Catálogo de datos |
+| Metastore DB |	PostgreSQL |	13 |	Persistencia de metadatos |
+| BI / Visualización |	Power BI | 	Desktop |	Dashboards interactivos |
+| Lenguajes |	Python / PySpark |	3.9+ |	Desarrollo de pipelines |
+
+________________________________________________________________________________________________________________________________________________________________________________________________________________
+## Patrones de Diseño Implementados
+________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+✅ Lambda Architecture (Batch + Speed layers unificados con Delta).
+
+✅ Medallion Architecture (Bronze → Silver → Gold).
+
+✅ Star Schema (Fact + Dimension tables).
+
+✅ Change Data Capture (CDC simulation).
+
+✅ Idempotent Writes (Deduplicación en streaming).
+
+✅ Stateful Processing (Windowing + Watermarking).
+
+
 
 ![Image]()
 
