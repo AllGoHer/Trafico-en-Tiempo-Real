@@ -44,7 +44,7 @@ ________________________________________________________________________________
 **Valor Aportado**
 
 | Área de Negocio	| Impacto |
-|_________________|_________|
+|-----------------|---------|
 | Monitoreo en Tiempo Real |	Dashboard operativo con latencia < 5 segundos |
 | Calidad de Datos |	Detección automática del 30% de datos corruptos |
 | Escalabilidad	| Pipeline preparado para procesar millones de eventos/día |
@@ -53,7 +53,7 @@ ________________________________________________________________________________
 **Capacidades Técnicas**
 
 |Componente |	Implementación |
-|___________|________________|
+|-----------|----------------|
 |Streaming |	Kafka + Spark Structured Streaming con watermarking |
 | Data Quality |	Validación en tiempo real con flags de calidad |
 | Storage |	Delta Lake con ACID transactions y time travel |
@@ -63,58 +63,6 @@ ________________________________________________________________________________
  ## 🏗️ Arquitectura Técnica
 ________________________________________________________________________________________________________________________________________________________________________________________________________________
  
-
-
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           PIPELINE DE DATOS EN TIEMPO REAL                      │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                 │
-│  ┌─────────────────────┐      ┌─────────────────────┐      ┌─────────────────┐  │
-│  │   CAPA DE INGESTA   │      │   CAPA DE PROCESO   │      │  CAPA DE DATOS  │  │
-│  ├─────────────────────┤      ├─────────────────────┤      ├─────────────────┤  │
-│  │                     │      │                     │      │                 │  │
-│  │  Producer (Python)  │      │   Spark Streaming   │      │   Delta Lake    │  │
-│  │  ─────────────────  │      │   ────────────────  │      │   ────────────  │  │
-│  │  • Faker + UUID     │      │   • Struct Streaming│      │   • ACID        │  │
-│  │  • Datos sucios     │───▶ │   • Checkpointing   │───▶  │   • Time Travel │  │
-│  │    (70% limpio,     │      │   • Watermarking    │      │   • Schema      │  │
-│  │     30% corrupto)   │      │   • Deduplicación   │      │     Evolution   │  │
-│  │                     │      │                     │      │                 │  │
-│  └─────────────────────┘      └─────────────────────┘      └─────────────────┘  │
-│           │                            │                            │           │
-│           ▼                            ▼                            ▼           │
-│  ┌─────────────────────────────────────────────────────────────────────────────┐│
-│  │                      ARQUITECTURA MEDALLION                                 ││
-│  │                                                                             ││
-│  │  ┌──────────────────┐     ┌──────────────────┐     ┌─────────────────────┐  ││
-│  │  │     BRONZE       │     │     SILVER       │     │       GOLD          │  ││
-│  │  │   (Raw Data)     │───▶│   (Clean Data)   │──▶  │  (Star Schema)      │  ││
-│  │  │                  │     │                  │     │                     │  ││
-│  │  │ • Kafka Ingest   │     │ • Data Quality   │     │ ┌────────┐ ┌───────┐│  ││
-│  │  │ • Raw JSON       │     │ • Type Casting   │     │ │dim_zone│ │dim_road│  ││ 
-│  │  │ • Immutable      │     │ • Validation     │     │ └───┬────┘ └──┬────┘│  ││
-│  │  │   Storage        │     │ • Deduplication  │     │     │         │     │  ││
-│  │  └──────────────────┘     │ • Feature Eng.   │     │     ▼         ▼     │  ││
-│  │                           └──────────────────┘     │   ┌───────────────┐ │  ││
-│  │                                                    │   │ fact_traffic  │ │  ││
-│  │                                                    │   └───────────────┘ │  ││
-│  │                                                    └─────────────────────┘  ││
-│  └─────────────────────────────────────────────────────────────────────────────┘│
-│                                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────────┐│
-│  │                      CAPA DE CATALOGACIÓN Y VISUALIZACIÓN                   ││
-│  │                                                                             ││
-│  │  ┌──────────────────┐                    ┌──────────────────────────────┐   ││
-│  │  │  Hive Metastore  │                    │         Power BI             │   ││
-│  │  │  ──────────────  │                    │         ──────────           │   ││
-│  │  │  • PostgreSQL    │                    │  • Conexión JDBC/ODBC        │   ││
-│  │  │  • Thrift URI    │                    │  • Modelado Semántico        │   ││
-│  │  │  • Schema        │                    │  • Visualización Avanzada    │   ││
-│  │  │    Registry      │                    │  • DAX / Medidas             │   ││
-│  │  └──────────────────┘                    └──────────────────────────────┘   ││
-│  └─────────────────────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────────────────────┘
-
 ![Image](https://github.com/user-attachments/assets/aa9ce6c2-4a88-4f1b-bd71-d73ccc5f32aa)
 
 ![Image]()
