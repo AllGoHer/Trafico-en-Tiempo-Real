@@ -38,10 +38,32 @@ El objetivo de este proyecto es crear una plataforma de datos en tiempo real esc
 * Dar soporte a paneles de BI y a la elaboración de informes operativos.
 
 ________________________________________________________________________________________________________________________________________________________________________________________________________________
+🎯 Valor empresarial y capacidades técnicas
+________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+**Valor Aportado**
+
+| Área de Negocio	| Impacto |
+|_________________|_________|
+| Monitoreo en Tiempo Real |	Dashboard operativo con latencia < 5 segundos |
+| Calidad de Datos |	Detección automática del 30% de datos corruptos |
+| Escalabilidad	| Pipeline preparado para procesar millones de eventos/día |
+| Toma de Decisiones |	Datos estructurados para análisis estratégico|
+
+**Capacidades Técnicas**
+
+|Componente |	Implementación |
+|___________|________________|
+|Streaming |	Kafka + Spark Structured Streaming con watermarking |
+| Data Quality |	Validación en tiempo real con flags de calidad |
+| Storage |	Delta Lake con ACID transactions y time travel |
+| Modelado	| Star Schema para Business Intelligence |
+| Visualización |	Integración nativa con Power BI |
+________________________________________________________________________________________________________________________________________________________________________________________________________________
  ## 🏗️ Arquitectura Técnica
 ________________________________________________________________________________________________________________________________________________________________________________________________________________
  
-![Image](https://github.com/user-attachments/assets/0c621b12-79e1-4d56-95b0-bfbf6b87ff38)
+
 
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                           PIPELINE DE DATOS EN TIEMPO REAL                      │
