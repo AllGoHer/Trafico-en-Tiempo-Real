@@ -99,9 +99,32 @@ ________________________________________________________________________________
 ✅ Stateful Processing (Windowing + Watermarking).
 
 
+________________________________________________________________________________________________________________________________________________________________________________________________________________
+## 📂 Estructura del Proyecto
+________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Real Time Traffic/
+│
+├── producer/
+│   └── traffic_dirty_producer.py      # Generador de datos con calidad variable
+│
+├── spark-apps/
+│   ├── traffic_bronze.py              # Capa Bronze: Ingesta cruda
+│   ├── traffic_silver.py              # Capa Silver: Limpieza y validación
+│   └── traffic_gold.py                # Capa Gold: Modelo estrella
+│
+├── hive-conf/
+│   └── hive-site.xml                  # Configuración del metastore
+│
+├── warehouse/                          # Directorio de datos Delta Lake
+│
+├── docker-compose.yaml                 # Infraestructura completa
+├── commands.txt                        # Referencia de comandos
+├── SQL.txt                             # DDL y consultas analíticas
+└── README.md                           # Documentación (este archivo)
 
 
-![Image]()
+![Image](https://github.com/user-attachments/assets/8f40a368-a44c-4c8f-a7c6-ba8555e47d05)
 
 ![Image]()
 
