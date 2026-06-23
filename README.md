@@ -174,7 +174,11 @@ ________________________________________________________________________________
 
 **Prerrequisitos**
 
-* Docker y [Docker Compose]() instalados y corriendo.
+* Docker y [Docker Compose](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/docker-compose.yaml) instalados y corriendo.
+
+  Código:
+
+           docker compose up -d
   
 * Python 3.x instalado localmente (para el productor).
   
