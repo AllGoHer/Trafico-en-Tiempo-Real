@@ -182,7 +182,7 @@ ________________________________________________________________________________
   
 * Python 3.x instalado localmente (para el productor).
   
-* Los contenedores de infraestructura (Spark, Kafka, Hive) deben estar levantados.
+* Los contenedores de infraestructura (Spark, Kafka, [Hive](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/hive-conf/hive-site.xml)) deben estar levantados.
 
 
 **1. Configurar entorno local**
