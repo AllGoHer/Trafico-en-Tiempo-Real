@@ -169,6 +169,7 @@ Ingeniería de Variables: Crea banderas de "Hora Pico" y categoriza la velocidad
 
 Proporción: 70% datos limpios / 30% datos sucios
 
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 **Pipeline de Limpieza:**
 
@@ -181,6 +182,7 @@ Proporción: 70% datos limpios / 30% datos sucios
 | 5	| Deduplicación	| Eliminación de duplicados por (vehicle_id, event_ts) |
 | 6	| Feature Engineering	| hour, peak_flag, speed_band (LOW/MEDIUM/HIGH) |
 
+____________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 **Métricas de Calidad:**
 
@@ -192,7 +194,7 @@ Proporción: 70% datos limpios / 30% datos sucios
 
 * Datos corruptos: ❌ (filtrados)
 
-  
+__________________________________________________________________________________________________________________________________________________________________________________________________________________________  
 
 **4. Capa Gold ([traffic_gold.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/apps/traffic_gold.py))**
 
