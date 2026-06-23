@@ -487,9 +487,9 @@ ________________________________________________________________________________
 
 •	Los Volumes:
 
-o	hive-site.xml: Sobreescribe el archivo de configuración nativo de Hive para que se conecte a tu PostgreSQL, o a un S3/MinIO si estás usando el optimizador de KRaft.
+   o	hive-site.xml: Sobreescribe el archivo de configuración nativo de Hive para que se conecte a tu PostgreSQL, o a un S3/MinIO si estás usando el optimizador de KRaft.
 
-o	warehouse: Es la carpeta donde se guardan los datos reales si usaras Hive nativo. Aquí es donde Spark escribe los datos procesados.
+   o	warehouse: Es la carpeta donde se guardan los datos reales si usaras Hive nativo. Aquí es donde Spark escribe los datos procesados.
 
 •	**El nombre de la variable SERVICE_NAME: metastore: Es un identificador interno. En sistemas Hadoop clásicos, puedes tener varios Metastores (uno para desarrollo, otro para producción). Aquí tienes uno solo.
 
@@ -508,11 +508,11 @@ o	warehouse: Es la carpeta donde se guardan los datos reales si usaras Hive nati
 
 •	Los Volumes:
 
-o	warehouse: Comparte la carpeta de datos con los Workers. Si el Master necesita procesar algo, lo hace directamente en este directorio sin pasar por la red. A esto se le llama Compute o Shuffle I/O Local. Es extremadamente rápido.
+   o	warehouse: Comparte la carpeta de datos con los Workers. Si el Master necesita procesar algo, lo hace directamente en este directorio sin pasar por la red. A esto se le llama Compute o Shuffle I/O Local. Es extremadamente rápido.
 
-o	apps: Donde pones tus scripts .py de Airflow o Scala.
+   o	apps: Donde pones tus scripts .py de Airflow o Scala.
 
-o	spark-ivy: Almacena las dependencias de Java (la librería de Spark) de forma cacheada para no descargarlas cada vez que mandas un trabajo.
+   o	spark-ivy: Almacena las dependencias de Java (la librería de Spark) de forma cacheada para no descargarlas cada vez que mandas un trabajo.
 
 •	hostname: spark-master: Fija el nombre de la máquina. Los Workers lo usarán para conectarse al puerto 7077.
 
@@ -526,11 +526,11 @@ o	spark-ivy: Almacena las dependencias de Java (la librería de Spark) de forma 
 
 •	Puertos del Worker:
 
-o	4040: Puerto interno por si un trabajo se desborda.
+   o	4040: Puerto interno por si un trabajo se desborda.
 
-o	10000: Puerto para el backend del Spark UI (si lo usas).
+   o	10000: Puerto para el backend del Spark UI (si lo usas).
 
-o	8081: Puerto por defecto para métricas internas.
+   o	8081: Puerto por defecto para métricas internas.
 
 •	depends_on - spark-master: Un Worker no puede trabajar sin un Master vivo. Tiene que esperar a que el Master esté 100% arriba.
 
@@ -545,9 +545,9 @@ o	8081: Puerto por defecto para métricas internas.
 
 •	Puertos:
 
-o	9092: Usado para la comunicación interna entre los contenedores Spark.
+   o	9092: Usado para la comunicación interna entre los contenedores Spark.
 
-o	29092: Expuesto a tu computadora local (host.docker.internal:29092) para que tus scripts de Python en Windows puedan leer o escribir en Kafka sin instalar Kafka en tu PC.
+   o	29092: Expuesto a tu computadora local (host.docker.internal:29092) para que tus scripts de Python en Windows puedan leer o escribir en Kafka sin instalar Kafka en tu PC.
 
 •	**CONTROLLER (Puerto 9093): Es un canal oculto que Kafka usa internamente para que los nodos se pongan de acuerdo en cuanto a quién es el "Jefe".
 
@@ -574,6 +574,295 @@ ________________________________________________________________________________
 
           <property> <name>javax.jdo.option.ConnectionURL</name> <value>jdbc:postgresql://postgres-metastore:5432/metastore</value> </property> <property> <name>javax.jdo.option.ConnectionDriverName</name>           <value>org.postgresql.Driver</value> </property> <property> <name>javax.jdo.option.ConnectionUserName</name> <value>hive</value> </property> <property> <name>javax.jdo.option.ConnectionPassword</name> <value>hive</value> </property> <property> <name>datanucleus.autoCreateSchema</name> <value>false</value> </property> <property> <name>hive.metastore.schema.verification</name> <value>true</value> </property> <property> <name>hive.metastore.uris</name> <value>thrift://hive-metastore:9083</value> </property> <property> <name>hive.metastore.warehouse.dir</name> <value>/opt/hive/warehouse</value> </property> </configuration>
 
+
+![Image](https://github.com/user-attachments/assets/ad751d33-b60f-41a4-8932-3b28389d6f23)
+
+5.	Ahora levantamos el docker-compose. 
+
+Código:
+
+	    Docker compose up -d
+
+
+![Image](https://github.com/user-attachments/assets/2537dd3d-8dbb-4a0d-92bf-50a8e8d55498)
+
+
+Ahora verificamos que se haya creado y este activo los contenedores.
+
+![Image](https://github.com/user-attachments/assets/4eae091a-7434-447e-9810-5442ca216263)
+
+📌<mark>NOTA:</mark> en caso que pauses el proyecto y vuelvas en otro momento a levantar los contenedores, observaras el contenedor hive no arrancara. Para ello debemos eliminar todo el container y volver al VSC y, eliminar la carpeta hive-conf y volverla a crear, luego por ultimo volvemos a levantar el docker compose y veras que ya no hay fallas al enceder el container hive-metastore.
+
+6.	Creamos un nuevo carpeta en VSC llamada “producer” y dentro de ella un archivo llamado traffic_dirty_producer.py con el siguiente código.
+
+Código:
+
+        from kafka import KafkaProducer
+        from faker import Faker
+        import json
+        import random
+        import time
+        from datetime import datetime,timedelta 
+        import pytz
+
+        fake = Faker()
+
+        producer = KafkaProducer(
+            bootstrap_servers="localhost:29092",
+            value_serializer=lambda v: json.dumps(v).encode("utf-8")
+        )
+
+        roads = ["R100", "R200", "R300", "R400"]
+        zones = ["CBD", "AIRPORT", "TECHPARK", "SUBURB", "TRAINSTATION"]
+        weather = ["CLEAR", "RAIN", "FOG", "STORM"]
+
+        vehicle_cache = []
+
+        def generate_clean_event():
+
+            vid = fake.uuid4()
+            vehicle_cache.append(vid)
+
+            return {
+                "vehicle_id": vid,
+                "road_id": random.choice(roads),
+                "city_zone": random.choice(zones),
+                "speed": random.randint(20, 100),
+                "congestion_level": random.randint(1, 5),
+                "weather": random.choice(weather),
+                "event_time": datetime.now(pytz.utc).isoformat()
+            }
+
+
+        def generate_dirty_event():
+
+            dirty_type = random.choice([
+                "null_speed",
+                "negative_speed",
+                "extreme_speed",
+                "duplicate_vehicle",
+                "late_event",
+                "future_event",
+                "wrong_datatype",
+                "schema_drift",
+                "corrupt_json"
+            ])
+
+            base = generate_clean_event()
+
+            if dirty_type == "null_speed":
+                base["speed"] = None
+
+            elif dirty_type == "negative_speed":
+                base["speed"] = -40
+
+            elif dirty_type == "extreme_speed":
+                base["speed"] = 420
+
+            elif dirty_type == "duplicate_vehicle" and vehicle_cache:
+                base["vehicle_id"] = random.choice(vehicle_cache)
+
+            elif dirty_type == "late_event":
+                base["event_time"] = (
+                    datetime.now(pytz.utc) - timedelta(minutes=random.randint(10, 120))
+                ).isoformat()
+
+            elif dirty_type == "future_event":
+                base["event_time"] = (
+                    datetime.now(pytz.utc) + timedelta(minutes=random.randint(5, 60))
+                ).isoformat()
+
+            elif dirty_type == "wrong_datatype":
+                base["speed"] = "FAST"
+
+            elif dirty_type == "schema_drift":
+                base["road_condition"] = random.choice(["GOOD", "BAD", "UNDER_CONSTRUCTION"])
+
+            elif dirty_type == "corrupt_json":
+                return "###CORRUPTED_EVENT###"
+
+            return base
+
+
+        while True:
+
+            if random.random() < 0.7:
+                event = generate_clean_event()
+            else:
+                event = generate_dirty_event()
+
+            if isinstance(event, str):
+                producer.send("traffic-topic", value={"raw": event})
+                print("CORRUPT EVENT SENT")
+            else:
+                producer.send("traffic-topic", value=event)
+                print(event)
+
+            time.sleep(random.uniform(0.5, 1.5))
+
+____________________________________________________________________________________________________________________________________________________________________________________________________________________________
+### 🔥 Ahora paso a explicar el presente código.
+
+**📦 Imports y Configuración Inicial**
+
+![Image](https://github.com/user-attachments/assets/26e49254-2e08-4189-ab23-26eb21e79063) 
+
+•	 Faker: Librería de Python que genera datos falsos realistas (nombres de ciudades, correos, IDs).
+
+•	pytz: Librería de zonas horarias. Usar datetime.utcnow() está obsoleto y ya no se recomienda. La forma profesional y moderna es datetime.now(pytz.utc) para asegurar que estés manejando la misma zona horaria en todos tus sistemas.
+
+**🚀 Configuración del Productor Kafka**
+
+![Image](https://github.com/user-attachments/assets/0f45b4c2-4687-4d2f-9e95-b3a2a8b05b3a)
+
+•	**producer = KafkaProducer(...):** Conecta a Kafka en tu Docker (localhost:29002) y usa un serializador lambda para convertir tu diccionario en texto JSON y luego en bytes (encode("utf-18"`) para que Kafka lo entienda.
+
+**📋 Listas de Datos Predefinidos**
+
+![Image](https://github.com/user-attachments/assets/a06927a4-fc05-4fae-969b-5b285739a798)
+
+•	No es solo generar datos al azar; es generar datos coherentes. Usar "R100" y "AIRPORT" asegura que las reglas de negocio tengan sentido lógico.
+
+**🧹 Generador de Eventos Limpios**
+
+![Image](https://github.com/user-attachments/assets/dff0eddd-9abf-4a48-bd6e-1714ae576286)
+
+•	Para simular un "Dato Duplicado", necesitas que el mismo vehicle_id exista previamente. Esta lista en memoria guarda los IDs válidos generados. Si se elige el error "duplicado", el código "robará" uno de estos IDs y lo sobrescribirá, simulando que el sensor envió el mismo evento dos veces.
+
+•	 Cuando un semáforo se cae, a menudo envía el mismo evento múltiples veces antes de levantarse. Si el semáforo envía el "R100", lo más probable es que el registro esté duplicado en la base de datos. Aquí generamos un evento perfectamente limpio con datetime moderno y velocidades lógicas.
+
+**💥 Generador de Eventos Sucios**
+
+Esta función es clave: simula 9 tipos diferentes de errores que podrían ocurrir en datos reales:
+
+![Image](https://github.com/user-attachments/assets/55726874-91a5-4484-a083-fccb5934158a)
+
+![Image](https://github.com/user-attachments/assets/0902da99-786e-4f04-83c3-9a5533ded74f)
+
+•	El propósito: Simular fallos de hardware en la fuente de datos cruda. Un motor de tráfico nunca medirá velocidades negativas. Si tu pipeline falla aquí, el Data Engineer pierde el dato, lo cual es peor que recibir un dato sucio pero estructural.
+
+![Image](https://github.com/user-attachments/assets/719e9712-a0fc-4b27-b4cc-209f83a0cf64)
+
+•	El propósito: Simula que el paquete de red del sensor falló en la red y el dato te llega 10 minutos tarde. En tiempo real, si tu pipeline tiene configurado Watermarks en Databricks, este evento debería ser descartado, o actualizado.
+
+![Image](https://github.com/user-attachments/assets/0c9f6baf-b37d-4d14-9a7e-11e323172f8d)
+
+•	El propósito: Simula un error del reloj del sensor. El reloj del dispositivo de tráfico está adelantado. Si tu pipeline no maneja "Tiempos Futuros", destruirá tu análisis temporal.
+
+![Image](https://github.com/user-attachments/assets/9f8676e2-6e8b-476b-9911-19c271a11360)
+
+**🔄 Bucle Principal de Producción**
+
+![Image](https://github.com/user-attachments/assets/25162624-fa7a-4dfd-9012-69e6a360485d)
+
+•	En la vida real, los datos buenos y los errores viajan por el mismo canal de Kafka. Un 30% de error es un porcentaje de ruido alto, pero realista.
+
+•	Nota técnica: Al inyectar basura en la fuente (el productor), te ahorras el costo de procesamiento. El filtro de limpieza se hace en el consumidor. Si el 30% de los datos son basura, es mejor filtrarlos aquí en Python antes de enviarlos a Databricks para no desperdiciar recursos de red y cómputo en Databricks.
+
+![Image](https://github.com/user-attachments/assets/732997c4-ad2c-459d-a532-8d95b6c124dc)
+
+•	El control de velocidad aleatorio
+
+![Image](https://github.com/user-attachments/assets/413966ae-c30e-44f9-b7bb-3f1824d0d181)
+
+•	El problema del streaming a nivel de transporte: Si quitamos el time.sleep y dejas que Python envíe datos lo más rápido posible, puedes saturar el ancho de banda de red o sobrecargar el Kernel de la máquina de Kafka o Databricks. Poner una pausa aleatoria simula el comportamiento de una red de sensores que no envían datos a velocidad constante, dándole un "respiro" a la tubería de Streaming.
+
+**🎯 Propósito del Código**
+
+Este productor se usa típicamente para:
+
+1.	Pruebas de sistemas de streaming (Apache Kafka, Spark Streaming, Flink)
+	
+2.	Validación de pipelines de datos - ¿Cómo maneja el sistema datos corruptos?
+	
+3.	Demostración de calidad de datos - Muestra problemas comunes en datos del mundo real
+	
+4.	Monitoreo y alertas - ¿Se detectan eventos anómalos?
+
+
+**⚠️ Tipos de Suciedad Generados**
+
+![image](https://github.com/user-attachments/assets/0c34327d-b0f4-4768-9e19-cda4a9dc8a93)
+ 
+Este código es excelente para entrenar sistemas de detección de anomalías y probar cómo reaccionan las aplicaciones ante datos impuros.
+
+🧠 ¿Qué pasa internamente en Kafka?
+
+Tú estás enviando dos tipos de estructuras al tópico traffic-topic:
+
+1.	Para el error de JSON Corrupto: Mandas un texto crudo: {"raw": "###CORRUPTO###"}. El consumidor en Databricks es lo suficientemente inteligente para ver el string y enviarlo a la "Papelera de basura" (Dead Letter Queue en Databricks) sin que el proceso se rompa.
+   
+2.	Para todos los demás errores (Null speed, Late Event, Duplicado, Futuro, Schema Shift): Mandas un JSON perfectamente estructuralmente, pero con los valores corruptos por dentro. El consumidor en Databricks leerá el JSON, detectará los valores nulos, negativos o erróneos y aplicará las reglas para enviarlos a la papelera, sin fallar el proceso completo de Databricks.
+
+**<mark>Nota técnica:</mark>** A pesar de ser "Sucio" bajo el punto de vista de la regla de negocio, el JSON subyacente sigue siendo válido estructuralmente. El string "###CORRUPTO###" simula que el paquete de red se corrompió en la transmisión de red y no se pudo leer bien el archivo JSON antes de enviarlo). En la vida real, esto suele ser un "Mensaje no analizable: Cannot read field 'x'").
+
+
+**💡 Nota sobre el error del código original (La trampa del KeyError)**
+
+La línea del Duplicado está así: 
+
+elif dirty_type == "duplicate_vehicle" and vehicle_cache: base["vehicle_id"] = random.choice(vehicle_cache)
+
+**El problema de esta línea:** Si la lista <mark>vehicle_cache</mark> está vacía (porque no se han generado IDs todavía, o porque el caché se vació), <mark>random.choice([])</mark> lanzará un error <mark>IndexError: Cannot choose from an empty sequence</mark>, hundirá tu código.
+
+**¿Por qué el autor lo dejó así? (El concepto "Data Filtering Pre-Shuffle")**
+
+ Se llama así porque es una técnica para optimizar la red. Si tu pipeline tiene una alta cardinalidad (ej. 100,000 sensores), hacer un <mark>filter()</mark> en Databricks es costoso porque requiere mover millones de datos por la red.
+La técnica de <mark>"Pre-Shuffle" (Pre-Filtrado en la fuente)</mark> consiste en simplemente descartar el evento sucio en Python antes de enviarlo a Kafka. De esta forma, Databricks recibirá un flujo mucho más limpio. Si el sensor reporta un error de duplicado pero la lista <mark>vehicle_cache</mark> está vacía, el código está programado para no fallar intencionalmente, simplemente ignora el error y deja pasar el dato "sucio" con la etiqueta de error inyectada <mark>({"raw": event})</mark>.
+
+Código:
+        def generate_dirty_event():
+            # Elige aleatoriamente un tipo de "suciedad"
+            dirty_type = random.choice([
+                "null_speed",          # Velocidad nula
+                "negative_speed",      # Velocidad negativa
+                "extreme_speed",       # Velocidad extrema (420 km/h)
+                "duplicate_vehicle",   # ID de vehículo duplicado
+                "late_event",          # Evento del pasado (10-120 min atrás)
+                "future_event",        # Evento del futuro (5-60 min adelante)
+                "wrong_datatype",      # Tipo de dato incorrecto (string en lugar de número)
+                "schema_drift",        # Campo nuevo no esperado
+                "corrupt_json"         # JSON corrupto (string plano)
+            ])
+    
+            base = generate_clean_event()  # Genera evento base limpio
+    
+            # Aplica la corrupción según el tipo elegido
+            if dirty_type == "null_speed":
+                base["speed"] = None       # El sensor falló y no capturó el dato.
+        
+            elif dirty_type == "negative_speed":
+                base["speed"] = -40       # El sensor falló y leyó negativo.
+        
+            elif dirty_type == "extreme_speed":
+                base["speed"] = 420
+        
+            elif dirty_type == "duplicate_vehicle" and vehicle_cache:
+                base["vehicle_id"] = random.choice(vehicle_cache)  # Usa ID existente
+        
+            elif dirty_type == "late_event":
+                base["event_time"] = (datetime.now(pytz.utc) - timedelta(minutes=random.randint(10, 120))).isoformat()
+        
+            elif dirty_type == "future_event":
+                base["event_time"] = (datetime.now(pytz.utc) + timedelta(minutes=random.randint(5, 60))).isoformat()
+        
+            elif dirty_type == "wrong_datatype":
+                base["speed"] = "FAST"  # String en lugar de número
+        
+            elif dirty_type == "schema_drift":
+                base["road_condition"] = random.choice(["GOOD", "BAD", "UNDER_CONSTRUCTION"])  # Campo extra
+        
+            elif dirty_type == "corrupt_json":
+                return "###CORRUPTED_EVENT###"  # No es un diccionario válido
+    
+            return base
+
+
+ahora iremos a la interface de usuario de Kafka, a través de docker desktop, haciendo click en el puerto de Kafka-ui (localhost:8090).
+
+![Image](https://github.com/user-attachments/assets/9599b6e7-fb3a-4a5a-a67c-f6270909182c)
+
+![Image]()
 
 ![Image]()
 
