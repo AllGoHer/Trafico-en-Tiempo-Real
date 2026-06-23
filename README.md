@@ -863,7 +863,503 @@ ahora iremos a la interface de usuario de Kafka, a través de docker desktop, ha
 
 ![Image](https://github.com/user-attachments/assets/9599b6e7-fb3a-4a5a-a67c-f6270909182c)
 
-![Image]()
+Y se abrirá la siguiente ventana.
+
+![Image](https://github.com/user-attachments/assets/2beace32-1b8d-46fe-8d04-2d6d95299eb6)
+
+Lo siguiente será crear un tema (topic); asi es que, iremos a la terminal y pasamos el siguiente 
+
+código:
+
+        Docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --create --topic traffic-topic --bootstrap-server kafka:9092 --partitions 3 --replication-factor 1
+
+
+![Image](https://github.com/user-attachments/assets/2f079c78-71a2-48f9-baf5-eb5eaec864fc)
+
+#### 🧠 Para que lo entiendan perfectamente, voy a desarmar el comando pieza por pieza:
+
+**1. Docker exec -it kafka**
+
+•	*docker exec:* Es una instrucción de Docker que sirve para ejecutar un comando dentro de un contenedor que ya está corriendo.
+
+•	*-it*: Son dos banderas (flags). -i mantiene la entrada estándar abierta (interactivo) y -t asigna una terminal. En resumen, permite interactuar con el contenedor como si estuviéramos escribiendo directamente en su pantalla.
+
+•	*kafka*: Es el nombre del contenedor de Docker donde está instalado Kafka. (Si tu contenedor se llamara diferente, aquí iría otro nombre).
+
+**2. /opt/kafka/bin/kafka-topics.sh**
+
+•	Esta es la ruta completa dentro del contenedor donde se encuentra el script de consola de Kafka encargado de administrar los temas (crear, borrar, listar, modificar). Es el ejecutable que hace el trabajo real.
+
+**3. --create**
+
+•	Es la orden específica que le da al script kafka-topics.sh. Le dice: "Quiero crear un topic nuevo". (Otros ejemplos podrían ser --list para listarlos o --describe para ver su configuración).
+
+**4. --topic traffic-topic**
+
+•	Define el nombre del tema que vas a crear. En este caso, el tema se llamará traffic-topic (probablemente se usará para enviar y recibir datos sobre tráfico).
+
+•	<mark>Nota:</mark> Un topic en Kafka es como una carpeta o un canal de chat donde se guardan los mensajes de un tema específico.
+
+5. <mark>--bootstrap-server kafka:9092</mark>
+
+•	Le dice al script a qué servidor de Kafka debe conectarse para crear el tema.
+
+•	*kafka*: Es el nombre del host (usualmente el nombre del contenedor en la red de Docker).
+
+•	9092: Es el puerto por defecto en el que Kafka escucha las conexiones.
+
+•	¿Por qué "bootstrap"?: Significa "servidor de arranque". El script se conecta a este servidor primero, y luego Kafka le dice: "Hola, soy yo, puedes hacer la creación aquí".
+
+6. <mark>--partitions 3</mark>
+
+•	Define el número de particiones que tendrá este tema (en este caso, 3).
+
+•	**¿Qué es una partición?** Es la forma en que Kafka divide los datos. Imagina que el topic es una carretera. En lugar de tener un solo carril, Kafka crea 3 carriles. Esto permite que múltiples aplicaciones (consumers) lean los datos al mismo tiempo en paralelo, una por cada partición, lo que hace que Kafka sea súper rápido y escale bien.
+
+7. <mark>--replication-factor 1</mark>
+
+•	Define el factor de replicación (en este caso, 1).
+
+•	¿Qué significa? Es la cantidad de copias (réplicas) de los datos que Kafka guardará por si algo falla.
+
+•	Al ser 1, significa que solo hay una copia de los datos. Si el servidor de Kafka se cae, esos datos no estarán disponibles hasta que se levante de nuevo (no hay respaldo en otro servidor).
+
+•	En un entorno de producción real (con varias máquinas), esto suele ser 2 o 3 para que, si un servidor se quema, los datos estén a salvo en otro. Como estás en Docker (probablemente local), 1 es lo correcto.
+
+Siguiendo con la creación del tema, vamos a la interface de usuario de Kafka para verificar la creación. 
+
+
+![Image](https://github.com/user-attachments/assets/85f90154-8381-44fe-b3c3-ede375c9829d)
+
+![Image](https://github.com/user-attachments/assets/8ace3a43-8bcc-4c92-b93a-91fadcd5f8af)
+
+Ahora creamos las dependencias para correr el código python, así es que, vamos a la terminal y pasamos los siguientes códigos.
+
+Código:
+               
+		python -m pip install kafka-python faker pytz
+
+luego entramos a la carpeta producer.
+
+Código:
+              
+		cd producer
+
+código:
+
+        python traffic_dirty_producer.py
+
+
+![Image](https://github.com/user-attachments/assets/f143a4c3-89f7-4d99-a877-c47138230853)
+
+Luego de un corto tiempo (2 minutos aprox.)  para detener el proceso y no saturar la memoria local, detenemos el proceso con <mark>control C</mark>.
+
+Ahora regresamos a la interface de usuario de Kafka para la verificación.
+
+
+![Image](https://github.com/user-attachments/assets/2f01bfd1-dc61-4249-bacc-df020cc4ca15)
+
+![Image](https://github.com/user-attachments/assets/dafe98d3-7431-4922-9796-0a6c7410a235)
+
+![Image](https://github.com/user-attachments/assets/807572f8-e843-45ce-9920-d3e62818d546)
+
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+## ![Image](https://github.com/user-attachments/assets/5771a008-2cfb-42b1-82b6-e40cd70bcddf) CAPA DE BRONCE ([traffic_bronze.py]())
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+
+En esta parte, usaremos Spark para extraer los datos brutos de Kafka para crear la capa de bronce.
+
+Primero creare un archivo llamado traffic_bronce.py dentro del carpeta app. en VSCode.
+
+Código:
+
+        from pyspark.sql import SparkSession
+        from pyspark.sql.functions import *
+        from pyspark.sql.types import *
+
+        # Spark Session Config
+
+        spark = (
+            SparkSession.builder
+            .appName("TrafficStreamingLakehouse")
+            # cluster master
+            .master("spark://spark-master:7077")
+            # delta lake
+            .config("spark.sql.extensions",
+                    "io.delta.sql.DeltaSparkSessionExtension")
+            .config("spark.sql.catalog.spark_catalog",
+                    "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+            .enableHiveSupport()
+            .getOrCreate()
+        )
+
+        spark.sparkContext.setLogLevel("WARN")
+
+        # Kafka Raw Stream
+
+        raw_stream = (
+            spark.readStream
+            .format("kafka")
+            .option("kafka.bootstrap.servers", "kafka:9092")
+            .option("subscribe", "traffic-topic")
+            .option("startingOffsets", "latest")
+            .load()
+        )
+
+        # Convert Binary to String
+
+        json_stream = raw_stream.selectExpr(
+            "CAST(value AS STRING) as raw_json",
+            "timestamp as kafka_timestamp"
+        )
+
+        # Flexible Schema
+
+        traffic_schema = StructType([
+            StructField("vehicle_id", StringType()),
+            StructField("road_id", StringType()),
+            StructField("city_zone", StringType()),
+            StructField("speed", StringType()),
+            StructField("congestion_level", IntegerType()),
+            StructField("weather", StringType()),
+            StructField("event_time", StringType())
+        ])
+
+        parsed = json_stream.withColumn(
+            "data",
+            from_json(col("raw_json"), traffic_schema)
+        )
+
+        flattened = parsed.select(
+            "raw_json",
+            "kafka_timestamp",
+            "data.*"
+        )
+
+        # Bronze Delta Write
+
+        bronze_query = (
+            flattened.writeStream
+            .format("delta")
+            .outputMode("append")
+            .option("checkpointLocation", "/opt/spark/warehouse/chk/traffic_bronze")
+            .option("path", "/opt/spark/warehouse/traffic_bronze")
+            .start()
+        )
+
+        spark.streams.awaitAnyTermination()
+
+
+
+### 🧠Explicación del código paso a paso.
+
+El presente código lee datos de tráfico en vivo desde **Apache Kafka**, convierte el formato binario a un formato estructurado y lo guarda de forma continua e inmutable en un almacenamiento **Delta Lake**.
+A continuación, explico cada bloque del código al detalle:
+
+**📦 IMPORTS - Librerías necesarias**
+
+![Image](https://github.com/user-attachments/assets/4d5996e9-1197-4197-9248-4117204a8661)
+
+•	SparkSession: Es el punto de entrada principal para programar en Spark SQL con DataFrame.
+
+•	functions: Importa todas las funciones de columna de Spark (como col, from_json, etc.).
+
+**Importa TODAS las funciones de Spark SQL (el * significa "todas")**. Estas incluyen:
+
+•	col() - Para referenciar columnas.
+
+•	from_json() - Para parsear JSON.
+
+•	when(), lit(), avg(), sum(), etc.
+
+•	types: Importa los tipos de datos para definir esquemas (como StringType, IntegerType, StructType).
+              
+**Importa TODOS los tipos de datos de Spark:**
+
+•	StructType - Estructura compleja (como un objeto).
+
+•	StringType, IntegerType, DoubleType, etc.
+
+•	ArrayType, MapType.
+
+**🚀 CONFIGURACIÓN DE SPARK SESSION**
+
+![Image](https://github.com/user-attachments/assets/81e126b4-be2b-45ee-bf81-6441409512af)
+
+![Image](https://github.com/user-attachments/assets/7284c625-abbc-4396-b9f6-35a2fd013f5f)
+
+Crea un builder de SparkSession con:
+
+•	SparkSession.builder – Inicia la construcción.
+
+•	.appName(“…”) – Nombre de la aplicación (aparece en la UI de Spark).
+
+![Image](https://github.com/user-attachments/assets/b1c4fe99-eeee-49a2-9392-2902bb527f23)
+
+Define el cluster master:
+
+•	spark:// - Protocolo para el cluster manager de Spark standalone.
+
+•	spark-master:7077 – Hostname y puerto del master (en el docker-compose).
+
+•	Esto significa que Spark se conectará al cluster que tienes en Docker.
+
+![Image](https://github.com/user-attachments/assets/ccd703a8-b436-44c3-8ada-f588ad7565e3)
+
+Configura extensiones de Spark SQL para habilitar Delta Lake:
+
+•	DeltaSparkSessionExtension – Permite usar comandos específicos de Delta (como MERGE, OPTIMIZE, etc.)
+
+
+![Image](https://github.com/user-attachments/assets/27d1a088-038c-4f35-a6de-c2da3c71a0d5)
+
+Configura el catálogo de Spark para usar el catálogo de Delta:
+
+•	Reemplaza el catálogo predeterminado con el de Delta.
+
+•	Permite que Spark trate las tablas Delta como tablas Spark normales.
+
+![Image](https://github.com/user-attachments/assets/dea4cb9d-82a1-4b5c-93b6-13ddebba338e)
+
+Habilita soporte para Hive Metastore:
+
+•	Permite a Spark leer/escribir tablas gestionadas por Hive.
+
+•	Usa el metastore de Hive (que configuraste en el docker-compose).
+
+•	Permite usar SQL de Hive en Spark.
+
+![Image](https://github.com/user-attachments/assets/7a0dde16-e12a-4292-8c6e-395a6faf904b)
+
+Obtiene o crea la SparkSession:
+
+•	Si ya existe una sesión activa, la reutiliza.
+
+•	Si no existe, crea una nueva.
+
+•	Esta es la forma recomendada en entornos de producción.
+
+![Image](https://github.com/user-attachments/assets/9c5a4edb-21c1-434a-883a-b04056834d13)
+
+Configura el nivel de logging:
+
+•	"WARN" solo muestra advertencias y errores (menos ruido).
+
+•	Otras opciones: "ERROR", "INFO", "DEBUG", "TRACE".
+
+**📡 LECTURA DEL STREAM DE KAFKA**
+
+![Image](https://github.com/user-attachments/assets/9babb8b5-4804-473b-8ab2-aa4b6994095f)
+
+Inicia la lectura de streaming:
+
+•	spark.readStream - Indica que es un stream continuo (no batch).
+
+•	.format("kafka") - Fuente de datos: Apache Kafka.
+
+![Image](https://github.com/user-attachments/assets/5db0dba1-7a81-4be8-8125-d3d1249000bb)
+
+Configura el servidor de Kafka:
+
+•	kafka:9092 - Hostname y puerto.
+
+•	Importante: Usa el nombre del servicio dentro de la red Docker, no localhost.
+
+![Image](https://github.com/user-attachments/assets/6587bc5c-0475-467c-b104-900d16d4a1e7)
+
+Especifica el topic a suscribir:
+
+•	traffic-topic - El topic donde tu productor envía los datos
+
+![Image](https://github.com/user-attachments/assets/daa44a94-b334-4873-ae5d-5488ebd8a017)
+
+Define dónde empezar a leer:
+
+•	"latest" - Solo mensajes nuevos (desde ahora).
+
+•	Otras opciones: "earliest" (todos los mensajes desde el inicio).
+
+•	También puedes especificar un timestamp: "startingOffsets": "{\"topic\":{\"0\":12345}}".
+
+![Image](https://github.com/user-attachments/assets/712ddb57-3d49-4985-8453-05f844cffb6e)
+
+Ejecuta la carga del DataFrame de streaming:
+
+•	Este DataFrame es un "stream" que se actualiza continuamente.
+
+•	Todavía NO está procesando datos, solo definió la fuente.
+
+#### 🔄 TRANSFORMACIÓN DE DATOS
+
+![Image](https://github.com/user-attachments/assets/0c6e3c59-9cfe-42ff-a26c-66591ca43c44)
+
+Convierte y selecciona campos:
+
+•	selectExpr: Permite usar expresiones SQL directamente sobre el stream.
+
+•	CAST(value AS STRING): convierte el arreglo de bytes (el payload de Kafka) en una cadena de texto legible, renombrándola como raw_json.
+
+•	timestamp as kafka_timestamp: Renombra el timestamp de Kafka (cuando llegó el mensaje al broker) para distinguirlo del timestamp del evento en sí (que vendrá dentro del JSON).
+
+•	Resultado: DataFrame con dos columnas: raw_json (string) y kafka_timestamp.
+
+
+#### 📋 DEFINICIÓN DEL ESQUEMA
+
+![Image](https://github.com/user-attachments/assets/c23078a8-d4aa-4242-a384-e75cadbb4e44)
+
+En el procesamiento de streams, es una buena práctica definir el esquema manualmente en lugar de dejar que Spark lo infiera (ya que la inferencia requiere revisar todos los datos primero, lo cual es ineficiente en streaming). Se define la estructura exacta que tendrá el JSON: identificador del vehículo, carretera, zona, velocidad (como texto, probablemente para limpiarlo después), nivel de congestión (como entero), clima y la hora del evento.
+
+Define el esquema para el JSON de tráfico:
+
+•	StructType - Define un objeto complejo (como un JSON).
+
+•	StructField - Cada campo del objeto.
+
+•	Campos:
+
+      o	vehicle_id - String (ID del vehículo).
+	  
+      o	road_id - String (ID de la carretera).
+	  
+      o	city_zone - String (Zona de la ciudad).
+	  
+      o	speed - String ⚠️ (Velocidad - definida como String para manejar datos sucios).
+	  
+      o	congestion_level - Integer (Nivel de congestión 1-5).
+	  
+      o	weather - String (Condición climática).
+	  
+      o	event_time - String (Timestamp del evento).
+	  
+📌Nota importante: speed es StringType() para manejar valores como "FAST" o null que genera el productor.
+
+
+
+#### 🔍 PARSEO DEL JSON
+
+![Image](https://github.com/user-attachments/assets/d09fdee5-890b-4290-9cf2-6c618c45ab8f)
+
+Parsea el JSON y lo convierte en columnas anidadas:
+
+•	withColumn() - Añade una nueva columna.
+
+•	"data" - Nombre de la nueva columna.
+
+•	from_json() - Función que parsea JSON.
+
+•	col("raw_json") - Columna que contiene el JSON.
+
+•	traffic_schema - Esquema que define la estructura.
+
+•	Resultado: Una columna data que contiene todas las propiedades del JSON como campos.
+
+#### 🧹 APLANADO DE LA ESTRUCTURA
+
+![Image](https://github.com/user-attachments/assets/763f7142-8a33-4d8d-b671-4ba33d1ee945)
+
+**Aplana la estructura anidada:**
+
+•	select() - Selecciona las columnas.
+
+•	"raw_json" - Mantiene el JSON original.
+
+•	"kafka_timestamp" - Mantiene el timestamp.
+
+•	"data.*" - Aplana todos los campos dentro de data.
+
+•	El operador * dentro de un struct "explota" o aplana las columnas anidadas. Es decir, convierte data.vehicle_id en simplemente vehicle_id a nivel de raíz, facilitando su consulta posterior. También conserva el JSON original y el timestamp de Kafka por si se necesitan para auditoría.
+
+•	Resultado: DataFrame plano con todas las columnas del JSON como columnas de nivel superior.
+
+Ejemplo:
+
+
+Antes:
+| raw_json | kafka_timestamp | data (struct) |
+|----------|-----------------|---------------|
+|          |                 | {vehicle_id: '123'} |
+|          |                 | {road_id: ‘45’}… |
+
+Después:
+
+| raw_json | kafka_timestamp | vehicle_id | road_id | speed | ...
+
+
+#### 💾 ESCRITURA EN DELTA LAKE (BRONZE)
+
+![Image](https://github.com/user-attachments/assets/cb5f29f8-b1d4-443d-a135-b97dfd4f2ac7)
+
+Configura la escritura en streaming:
+
+•	flattened.writeStream - Indica que es un stream de salida.
+
+•	.format("delta") - Escribe los datos usando Delta Lake. Esto permite transacciones ACID, time travel (viaje en el tiempo) y que el directorio se comporte como una "tabla".
+
+![Image](https://github.com/user-attachments/assets/3f7f5197-8a7f-42b4-9ebe-90ecccddbc2b)
+
+Define el modo de salida:
+
+•	"append" - Solo añade nuevos datos en filas a las tablas (no actualiza ni elimina). Tiene sentido porque en la capa Bronze solo queremos guardar el histórico crudo sin sobrescribir nada.
+
+•	Para streaming, las opciones son: append, update, complete
+
+![Image](https://github.com/user-attachments/assets/18cae80c-65e6-4ee2-a623-7d14a808e0f4)
+
+•	.option("checkpointLocation", ...): La parte más crítica del streaming. Spark guarda aquí un registro de qué mensajes de Kafka ya ha leído y procesado. Si el programa falla y se reinicia, leerá este directorio y retomará exactamente desde donde se quedó, sin perder datos ni duplicarlos.
+
+![Image](https://github.com/user-attachments/assets/d75d594f-e873-405a-926c-bc48ebc89355)
+
+•	.option("path", ...): La ruta física en el disco donde se guardarán los archivos Parquet y el log de transacciones de Delta (_delta_log).
+
+![Image](https://github.com/user-attachments/assets/5080b40a-0f62-46dc-bf5b-4359d88fca2b)
+
+Inicia el streaming:
+
+•	Comienza a procesar datos en background.
+
+•	Devuelve un StreamingQuery que puedes monitorear.
+
+•	No bloquea - continúa ejecutando en segundo plano.
+
+•	Al guardarse en la variable bronze_query, podrías detenerlo después con bronze_query.stop().
+
+#### 🔁 ESPERA INDEFINIDA
+
+![Image](https://github.com/user-attachments/assets/cfaff03c-97f1-43d5-a07e-af1a655372c4)
+
+Espera hasta que el stream termine:
+
+•	spark.streams - Obtiene todas las queries activas.
+
+•	awaitAnyTermination() - Bloquea el programa.
+
+•	Espera indefinidamente hasta que un stream falle o sea detenido manualmente.
+
+•	Importante: Sin esto, el programa terminaría inmediatamente y el stream no procesaría nada.
+
+
+#### 🎯 ARQUITECTURA COMPLETA
+
+
+Kafka (traffic-topic) (Binario)
+    ↓
+Spark ReadStream 
+    ↓
+JSON Parse (con esquema flexible)
+    ↓
+Data Aplanamiento
+    ↓
+Delta Lake (Guardar crudo + metadata = Bronze layer)
+
+
+
+* Volviendo al proceso del proyecto, abrimos el spark master en el navegador web y escribimos localhost:8080 
+
+
+![Image](https://github.com/user-attachments/assets/3da30a1b-a632-490b-917f-91534d90d2c7)
 
 ![Image]()
 
@@ -873,18 +1369,6 @@ ahora iremos a la interface de usuario de Kafka, a través de docker desktop, ha
 
 ![Image]()
 
-![Image]()
 
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
 
 
