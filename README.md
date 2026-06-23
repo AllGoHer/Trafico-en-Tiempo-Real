@@ -128,6 +128,7 @@ Deriva de esquema (Columnas inesperadas).
 
 JSONs corruptos (Datos inparseables).
 
+
 **2. Capa Bronze ([traffic_bronze.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/apps/traffic_bronze.py))**
 
 *Objetivo*: Ingerir todo sin descartar nada.
@@ -150,8 +151,26 @@ Operaciones con Estado: Usa Watermarking (marca de agua de 15 minutos) para mane
 
 Ingeniería de Variables: Crea banderas de "Hora Pico" y categoriza la velocidad (BAJA/MEDIA/ALTA).
 
+### 🧪 Gestión de Calidad de Datos
 
-☑️**Pipeline de Limpieza:**
+**Tipos de Datos Sucios Simulados**
+
+| Tipo	| Descripción	| Frecuencia	| Manejo en Silver |
+|------|-------------|------------|------------------|
+| null_speed	| Velocidad nula	| 3.3%	| Flag + filtrado |
+| negative_speed	| Velocidad negativa	| 3.3%	| Validación fallida |
+| extreme_speed |	420 km/h	| 3.3%	| Validación fallida |
+| duplicate_vehicle	| ID duplicado	| 3.3%	| Deduplicación |
+| late_event	| Timestamp pasado (>10min)	| 3.3%	| Watermark + filtrado |
+| future_event	| Timestamp futuro (>10min)	| 3.3%	| Time_valid = 0 |
+| wrong_datatype	| "FAST" en speed |	3.3%	| Cast a null |
+| schema_drift	| Campo extra	| 3.3%	| Ignorado en Gold |
+| corrupt_json	| JSON inválido	| 3.3%	| CORRUPT_JSON |
+
+Proporción: 70% datos limpios / 30% datos sucios
+
+
+**Pipeline de Limpieza:**
 
 | Etapa |	Operación	| Técnica |
 |-------|-----------|---------|
@@ -162,7 +181,8 @@ Ingeniería de Variables: Crea banderas de "Hora Pico" y categoriza la velocidad
 | 5	| Deduplicación	| Eliminación de duplicados por (vehicle_id, event_ts) |
 | 6	| Feature Engineering	| hour, peak_flag, speed_band (LOW/MEDIUM/HIGH) |
 
-☑️**Métricas de Calidad:**
+
+**Métricas de Calidad:**
 
 * Velocidades en rango válido: ✅
 
@@ -171,6 +191,8 @@ Ingeniería de Variables: Crea banderas de "Hora Pico" y categoriza la velocidad
 * IDs únicos: ✅
 
 * Datos corruptos: ❌ (filtrados)
+
+  
 
 **4. Capa Gold ([traffic_gold.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/apps/traffic_gold.py))**
 
@@ -185,10 +207,11 @@ Transforma los datos limpios de Silver en un ***Esquema Estrella (Star Schema)**
 ***fact_traffic***: La tabla central de hechos, extrayendo la fecha para optimizar las consultas.
 
 **Esquema Estrella (Star Schema)**
-Tabla	Tipo	Clave	Atributos
-dim_zone	Dimensión	city_zone	zone_type, traffic_risk
-dim_road	Dimensión	road_id	road_type, speed_limit
-fact_traffic	Hechos	(vehicle_id, event_ts)	speed, congestion_level, weather, hour, peak_flag, speed_band
+| Tabla	| Tipo |	Clave	| Atributos |
+|-------|------|-------|-----------|
+| dim_zone |	Dimensión	| city_zone |	zone_type, traffic_risk |
+| dim_road	| Dimensión	| road_id	| road_type, speed_limit |
+| fact_traffic	| Hechos	| (vehicle_id, event_ts) |	speed, congestion_level, weather, hour, peak_flag, speed_band |
 
 **5. Capa de Servicio ([SQL.txt](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/SQL.txt) y [commands.txt](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/commands.txt))**
 
@@ -202,18 +225,23 @@ ________________________________________________________________________________
 
 **Prerrequisitos**
 
-* Docker y [Docker Compose](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/docker-compose.yaml) instalados y corriendo.
+* Docker desktop (v20+) y [Docker Compose](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/docker-compose.yaml) instalados y corriendo.
 
   Código:
 
            docker compose up -d
+
+* VS Code (o IDE similar)
   
-* Python 3.x instalado localmente (para el productor).
+* Python 3.9+ instalado localmente (para el productor).
   
 * Los contenedores de infraestructura (Spark, Kafka, [Hive](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/hive-conf/hive-site.xml)) deben estar levantados.
 
+* Power BI Desktop (para visualización)
+  
 
 **1. Configurar entorno local**
+
 Instala las librerías necesarias para generar los datos falsos:
 
 Código:
@@ -259,6 +287,19 @@ Código:
 **5. Conexión a Power BI**
 
 Usa los comandos detallados en [commands.txt](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/commands.txt) para iniciar el Thrift Server y ejecuta las consultas de [SQL.txt](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/SQL.txt) para crear las vistas que conectará Power BI.
+
+____________________________________________________________________________________________________________________________________________________________________________________________________________________________
+## 🔍 Monitoreo y Observabilidad
+____________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+**Interfaces de Usuario**
+
+| Servicio	| URL	| Propósito |
+|----------|-----|-----------|
+| Kafka UI	| http://localhost:8090	| Monitoreo de topics y mensajes |
+| Spark Master	| http://localhost:8080	| Estado del cluster y workers |
+| Spark Worker	| http://localhost:8081	| Logs y métricas de ejecución |
+| Spark History	| http://localhost:18080	| Historial de aplicaciones |
 
 
 ![Image]()
