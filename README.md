@@ -597,44 +597,44 @@ Ahora verificamos que se haya creado y este activo los contenedores.
 
 Código:
 
-        from kafka import KafkaProducer
-        from faker import Faker
-        import json
-        import random
-        import time
-        from datetime import datetime,timedelta 
-        import pytz
+         from kafka import KafkaProducer
+         from faker import Faker
+         import json
+         import random
+         import time
+         from datetime import datetime,timedelta 
+         import pytz
 
-        fake = Faker()
+         fake = Faker()
 
-        producer = KafkaProducer(
+         producer = KafkaProducer(
             bootstrap_servers="localhost:29092",
             value_serializer=lambda v: json.dumps(v).encode("utf-8")
-        )
+          )
 
-        roads = ["R100", "R200", "R300", "R400"]
-        zones = ["CBD", "AIRPORT", "TECHPARK", "SUBURB", "TRAINSTATION"]
-        weather = ["CLEAR", "RAIN", "FOG", "STORM"]
+         roads = ["R100", "R200", "R300", "R400"]
+         zones = ["CBD", "AIRPORT", "TECHPARK", "SUBURB", "TRAINSTATION"]
+         weather = ["CLEAR", "RAIN", "FOG", "STORM"]
 
-        vehicle_cache = []
+         vehicle_cache = []
 
-        def generate_clean_event():
+         def generate_clean_event():
 
-            vid = fake.uuid4()
-            vehicle_cache.append(vid)
+             vid = fake.uuid4()
+             vehicle_cache.append(vid)
 
-            return {
-                "vehicle_id": vid,
-                "road_id": random.choice(roads),
-                "city_zone": random.choice(zones),
-                "speed": random.randint(20, 100),
-                "congestion_level": random.randint(1, 5),
-                "weather": random.choice(weather),
-                "event_time": datetime.now(pytz.utc).isoformat()
-            }
+             return {
+                 "vehicle_id": vid,
+                 "road_id": random.choice(roads),
+                 "city_zone": random.choice(zones),
+                 "speed": random.randint(20, 100),
+                 "congestion_level": random.randint(1, 5),
+                 "weather": random.choice(weather),
+                 "event_time": datetime.now(pytz.utc).isoformat()
+             }
 
 
-        def generate_dirty_event():
+         def generate_dirty_event():
 
             dirty_type = random.choice([
                 "null_speed",
