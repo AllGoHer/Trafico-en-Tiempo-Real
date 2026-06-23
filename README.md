@@ -15,7 +15,7 @@ El proyecto simula eventos de tráfico continuos generados por vehículos que ci
 ![Image](https://github.com/user-attachments/assets/8d9480d3-3790-4677-8a12-0ee6d19b9396)  ![Image](https://github.com/user-attachments/assets/2d66f89a-bca0-454d-b1d3-1366e0702a8b)  ![Image](https://github.com/user-attachments/assets/89552d90-3caf-4c16-b6ba-b3e52b78d91d)  ![Image](https://github.com/user-attachments/assets/fce18da2-78eb-4470-a27b-ceb93f706fce)
 
 ________________________________________________________________________________________________________________________________________________________________________________________________________________
-## 🎯 Problema Empresarial
+## 🎯 Problema de Negocio
 ________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 Los sistemas de monitorización del tráfico generan miles de eventos cada segundo.
@@ -811,6 +811,7 @@ elif dirty_type == "duplicate_vehicle" and vehicle_cache: base["vehicle_id"] = r
 La técnica de <mark>"Pre-Shuffle" (Pre-Filtrado en la fuente)</mark> consiste en simplemente descartar el evento sucio en Python antes de enviarlo a Kafka. De esta forma, Databricks recibirá un flujo mucho más limpio. Si el sensor reporta un error de duplicado pero la lista <mark>vehicle_cache</mark> está vacía, el código está programado para no fallar intencionalmente, simplemente ignora el error y deja pasar el dato "sucio" con la etiqueta de error inyectada <mark>({"raw": event})</mark>.
 
 Código:
+
         def generate_dirty_event():
             # Elige aleatoriamente un tipo de "suciedad"
             dirty_type = random.choice([
