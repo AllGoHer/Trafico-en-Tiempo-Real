@@ -308,30 +308,220 @@ ________________________________________________________________________________
 ## 👨‍💻 Author
 ____________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
-**Allan Gonzales (AllGoHer)**
+**Allan Gonzales (All GoHer)**
 
 Data Engineer | Streaming Data Engineer | Spark | Kafka | Delta Lake | Databricks | Airflow | Lakehouse Architecture
 
-*"Building scalable real-time data platforms one event at a time."*
+*"Creación de plataformas de datos en tiempo real escalables, evento a evento."*
 
 📧 Contacto
 Para preguntas, sugerencias o colaboraciones:
 
-Email: [tu-email@dominio.com]
+Email: [allgoher007@gmail.com]
 
-LinkedIn: [tu-linkedin-url]
+LinkedIn: [  ]
 
-GitHub: [tu-github-url]
-
-Portfolio: [tu-portfolio-url]
+GitHub: [https://github.com/AllGoHer]
 
 ____________________________________________________________________________________________________________________________________________________________________________________________________________________________
 ## 🧠 DESARROLLO DEL PROYECTO
 ____________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
-![Image]()
+### 🚦Analisis del Trafico-en-Tiempo-Real
 
-![Image]()
+1.	Primero creamos nuestra carpeta de trabajo desde la terminal
+
+Código:
+
+        mkdir Real_Time_Traffic
+
+luego ingresamos a la carpeta.
+
+Código:
+
+        cd Real_Time_Traffic
+
+![Image](https://github.com/user-attachments/assets/ed83eddb-ae9f-406f-bb54-86baf9d5aae2)
+
+2.	Activamos nuestro docker desktop
+
+![Image](https://github.com/user-attachments/assets/28cc2678-06be-409e-bb3e-6296856c4d28)
+
+3.	Abrimos visual estudio code y vinculamos con la carpeta principal (Real_Time_Traffic) y, creamos un archivo docker-compose.yaml con el siguiente código.
+
+Código:
+
+        services:
+
+         # =========================
+         # HIVE METASTORE DATABASE
+         # =========================
+         postgres-metastore:
+           image: postgres:13
+           container_name: hive-metastore-db
+           environment:
+             POSTGRES_DB: metastore
+             POSTGRES_USER: hive
+             POSTGRES_PASSWORD: hive
+           ports:
+             - "5435:5432"
+
+         # =========================
+         # HIVE METASTORE SERVICE
+         # =========================
+         hive-metastore:
+           image: apache/hive:3.1.3
+           container_name: hive-metastore
+           depends_on:
+             - postgres-metastore
+           environment:
+             SERVICE_NAME: metastore
+             DB_DRIVER: postgres
+             IS_RESUME: "false"
+           ports:
+             - "9083:9083"
+           volumes:
+             - ./hive-conf/hive-site.xml:/opt/hive/conf/hive-site.xml
+             - ./warehouse:/opt/hive/warehouse
+
+         # =========================
+         # SPARK MASTER
+         # =========================
+         spark-master:
+           image: apache/spark:3.5.1
+           container_name: spark-master
+           hostname: spark-master
+           command: >
+             bash -c "
+             /opt/spark/sbin/start-master.sh &&
+             tail -f /opt/spark/logs/spark--org.apache.spark.deploy.master*.out
+             "
+           ports:
+             - "8080:8080"   # Spark Master UI
+             - "7077:7077"   # Spark Master port
+           volumes:
+             - ./warehouse:/opt/spark/warehouse
+             - ./apps:/opt/spark-apps
+             - ./spark-ivy:/tmp/.ivy
+
+         # =========================
+         # SPARK WORKER
+         # =========================
+         spark-worker:
+           image: apache/spark:3.5.1
+           container_name: spark-worker
+           hostname: spark-worker
+           command: >
+             bash -c "/opt/spark/sbin/start-worker.sh spark://spark-master:7077 --cores 2 --memory 2g &&
+             tail -f /opt/spark/logs/spark--org.apache.spark.deploy.worker*.out"
+           ports:
+             - "8081:8081"
+             - "4040:4040"
+             - "10000:10000"
+           depends_on:
+             - spark-master
+           volumes:
+             - ./warehouse:/opt/spark/warehouse
+             - ./apps:/opt/spark-apps
+             - ./spark-ivy:/tmp/.ivy
+
+         # =========================
+         # KAFKA (KRaft mode)
+         # =========================
+         kafka:
+           image: apache/kafka:latest
+           container_name: kafka
+           ports:
+             - "9092:9092"
+             - "29092:29092"
+           environment:
+             KAFKA_NODE_ID: 1
+             KAFKA_PROCESS_ROLES: broker,controller
+             KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+             KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_EXTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+             KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_EXTERNAL://localhost:29092
+             KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+             KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+             KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+             KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+
+         # =========================
+         # KAFKA UI
+         # =========================
+         kafka-ui:
+           image: provectuslabs/kafka-ui:latest
+           container_name: kafka-ui
+           depends_on:
+             - kafka
+           ports:
+             - "8090:8080"
+           environment:
+             KAFKA_CLUSTERS_0_NAME: local
+             KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+
+
+### Ahora paso a explicar el código del docker-compose por cada container creado.
+
+**1. HIVE METASTORE DATABASE (El Cerebro del sistema)**
+•	La tecnología: Usas la imagen oficial de PostgreSQL (postgres:13).
+•	El propósito: Almacena los "Metadatos". No guarda los datos reales. Guarda qué tablas existen, cuántas particiones tienen y cuáles son los tipos de datos. Sin esto, Spark no sabe cómo leer tus datos.
+•	Variables de entorno: Configura el usuario, la contraseña y el nombre de la base de datos.
+•	Puerto 5435: Exposición a tu computadora para que puedas entrar a ver la base de datos con herramientas como DBeaver o DataGrip.
+**2. HIVE METASTORE SERVICE (El Traductor)**
+•	La tecnología: Usas la imagen oficial de Apache Hive 3.1.3.
+•	El propósito: Es el cerebro motor de la vieja escuela. Cuando tú escribes spark.sql("SELECT * FROM tabla"), Spark le pregunta a este servicio: "¿Dónde están físicamente los datos de esa tabla?". El Metastore le responde: "Están en el Worker 1, particiones 1 al 10".
+•	depends_on - postgres-metastore: Garantiza que Hive no intente arrancar hasta que la base de datos PostgreSQL esté 100% levantada. Si arrancan al mismo tiempo, Hive fallará porque no sabe quién es quién manda.
+•	IS_RESUME: "false": Si Hive se cae y lo reinicias, empieza desde cero. Es vital en clústers estáticos. Si estuviera en "true", intentar recuperar el estado anterior a veces rompe el clúster.
+•	Puerto 9083: El puerto por defecto por el que escucha peticiones de Spark o Hive.
+•	Los Volumes:
+o	hive-site.xml: Sobreescribe el archivo de configuración nativo de Hive para que se conecte a tu PostgreSQL, o a un S3/MinIO si estás usando el optimizador de KRaft.
+o	warehouse: Es la carpeta donde se guardan los datos reales si usaras Hive nativo. Aquí es donde Spark escribe los datos procesados.
+•	**El nombre de la variable SERVICE_NAME: metastore: Es un identificador interno. En sistemas Hadoop clásicos, puedes tener varios Metastores (uno para desarrollo, otro para producción). Aquí tienes uno solo.
+**3. SPARK MASTER (El Gerente del clúster)**
+•	La tecnología: Usas la imagen de Apache Spark 3.5.1.
+•	El propósito: Es el "Director de Orquestación". Asigna las tareas a los Workers y mantiene el estado global de la aplicación Spark.
+•	**El comando command: Le dice a la máquina: "Arranca el proceso Maestro y quédate mirando los logs".
+•	Puerto 8080: Exposición del servidor web de la interfaz de usuario de Spark.
+•	Puerto 7077: EL PUERTO CLAVE DE COMUNICACIÓN INTERNA. Los Workers usarán este puerto para reportarse con el Master y pedir trabajo.
+•	Los Volumes:
+o	warehouse: Comparte la carpeta de datos con los Workers. Si el Master necesita procesar algo, lo hace directamente en este directorio sin pasar por la red. A esto se le llama Compute o Shuffle I/O Local. Es extremadamente rápido.
+o	apps: Donde pones tus scripts .py de Airflow o Scala.
+o	spark-ivy: Almacena las dependencias de Java (la librería de Spark) de forma cacheada para no descargarlas cada vez que mandas un trabajo.
+•	hostname: spark-master: Fija el nombre de la máquina. Los Workers lo usarán para conectarse al puerto 7077.
+**4. SPARK WORKER (Los Operarios)**
+•	La tecnología: Misma versión de Spark (3.5.1).
+•	El propósito: Son los que ejecutan el código real (Transformaciones, Joins, GroupBys). Son los que consumen la memoria y la CPU.
+•	**El comando command: Le dice al Worker: "Conéctate al Master en el puerto 7077. Usa 2 núcleos (cores) y 2GB de RAM". "Quédate mirando los logs".
+•	Puertos del Worker:
+o	4040: Puerto interno por si un trabajo se desborda.
+o	10000: Puerto para el backend del Spark UI (si lo usas).
+o	8081: Puerto por defecto para métricas internas.
+•	depends_on - spark-master: Un Worker no puede trabajar sin un Master vivo. Tiene que esperar a que el Master esté 100% arriba.
+**5. KAFKA (El Transportador)**
+•	La tecnología: Usas apache/kafka:latest (Modo KRaft).
+•	El propósito: Mover datos masivos a velocidad extrema entre sistemas diferentes, sin que nadie pierda datos. En este entorno, suele usarse para transportar los datos crudos antes de que Spark los procese.
+•	KRaft (La innovación): Tradicionalmente, Kafka necesitaba un clúster de ZooKeeper aparte solo para saber quién es el "Jefe" (Controller). KRaft elimina ZooKeeper. Aquí ves cómo configurar el modo combinado: Este único contenedor actúa como nodo de red (broker) Y como "Jefe" (controller) al mismo tiempo.
+•	Puertos:
+o	9092: Usado para la comunicación interna entre los contenedores Spark.
+o	29092: Expuesto a tu computadora local (host.docker.internal:29092) para que tus scripts de Python en Windows puedan leer o escribir en Kafka sin instalar Kafka en tu PC.
+•	**CONTROLLER (Puerto 9093): Es un canal oculto que Kafka usa internamente para que los nodos se pongan de acuerdo en cuanto a quién es el "Jefe".
+•	ADVERTISED_LISTENERS: Aquí está el truco de red. Si te conectas desde Windows, Kafka te dirá: "Yo soy 'host.docker.internal:29092, conéctate por ahí". Si te conectas internamente (Docker a Docker), te dirá: "Yo soy 'kafka:9092, conéctate aquí".
+•	**KAFKA_LOG_DIRS: Donde Kafka guarda internamente los datos en el contenedor (en /tmp/...).
+**6. KAFKA UI (El Visor)**
+•	La tecnología: Una herramienta web de terceros (provectuslabs/kafka-ui:Puerto 8090 en tu código).
+•	**depends_on - kafka: No tiene sentido arrancar la interfaz si Kafka no existe.
+•	**KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092: Le dice a la UI: "Para ver los tópicos, conéctate internamente al puerto interno de Kafka".
+
+
+
+4.	En VSCode creamos la carpeta hive-conf y, dentro de ella creamos el archivo hive-site.xml ingresándole el siguiente código.
+
+ código:
+ 
+	         <configuration>
+
+          <property> <name>javax.jdo.option.ConnectionURL</name> <value>jdbc:postgresql://postgres-metastore:5432/metastore</value> </property> <property> <name>javax.jdo.option.ConnectionDriverName</name>           <value>org.postgresql.Driver</value> </property> <property> <name>javax.jdo.option.ConnectionUserName</name> <value>hive</value> </property> <property> <name>javax.jdo.option.ConnectionPassword</name> <value>hive</value> </property> <property> <name>datanucleus.autoCreateSchema</name> <value>false</value> </property> <property> <name>hive.metastore.schema.verification</name> <value>true</value> </property> <property> <name>hive.metastore.uris</name> <value>thrift://hive-metastore:9083</value> </property> <property> <name>hive.metastore.warehouse.dir</name> <value>/opt/hive/warehouse</value> </property> </configuration>
+
 
 ![Image]()
 
