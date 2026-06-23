@@ -160,9 +160,9 @@ Transforma los datos limpios de Silver en un ***Esquema Estrella (Star Schema)**
 
 ***dim_road***: Enriquece las carreteras con el tipo (Autopista/Ciudad) y el límite de velocidad legal.
 
-***fact_traffic**: La tabla central de hechos, extrayendo la fecha para optimizar las consultas.
+***fact_traffic***: La tabla central de hechos, extrayendo la fecha para optimizar las consultas.
 
-**5. Capa de Servicio ([SQL.txt]() y [commands.txt](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/commands.txt))**
+**5. Capa de Servicio ([SQL.txt](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/SQL.txt) y [commands.txt](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/commands.txt))**
 
 Inicializa el Metastore de Hive y el Thrift Server para exponer las tablas de Delta Lake.
 
@@ -174,7 +174,7 @@ ________________________________________________________________________________
 
 **Prerrequisitos**
 
-* Docker y Docker Compose instalados y corriendo.
+* Docker y [Docker Compose]() instalados y corriendo.
   
 * Python 3.x instalado localmente (para el productor).
   
@@ -226,7 +226,7 @@ Código:
 
 **5. Conexión a Power BI**
 
-Usa los comandos detallados en [commands.txt](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/commands.txt) para iniciar el Thrift Server y ejecuta las consultas de [SQL.txt]() para crear las vistas que conectará Power BI.
+Usa los comandos detallados en [commands.txt](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/commands.txt) para iniciar el Thrift Server y ejecuta las consultas de [SQL.txt](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/SQL.txt) para crear las vistas que conectará Power BI.
 
 
 ![Image]()
