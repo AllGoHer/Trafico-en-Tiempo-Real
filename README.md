@@ -105,88 +105,123 @@ ________________________________________________________________________________
 
 ![Image](https://github.com/user-attachments/assets/8f40a368-a44c-4c8f-a7c6-ba8555e47d05)
 
-**📂 Estructura del Proyecto y Explicación Profunda**
+________________________________________________________________________________________________________________________________________________________________________________________________________________
+### 📂 Estructura del Proyecto y Explicación Profunda
 
 El pipeline está dividido en scripts modulares que representan las diferentes etapas de la vida de los datos:
 
 **1. Simulación de Datos [traffic_dirty_producer.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/producer/traffic_dirty_producer.py)**
 
-Este script simula la dura realidad del mundo real.
+Este script simula la dura realidad del mundo real de los datos.
 
 70% Datos Limpios: Eventos realistas de tráfico (IDs de vehículos, velocidad, zonas, clima).
+
 30% Datos Sucios: Inyecta anomalías intencionales para probar el pipeline:
+
 Velocidades nulas, negativas o extremas (ej. 420 km/h).
+
 Eventos en el futuro (errores de reloj en sensores).
+
 Tipos de datos incorrectos (Texto en vez de Números).
+
 Deriva de esquema (Columnas inesperadas).
+
 JSONs corruptos (Datos inparseables).
 
-**2. Capa Bronze [traffic_bronze.py]()**
-*Objetivo*: Ingerir todo. Aquí no se descarta nada.
+**2. Capa Bronze ([traffic_bronze.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/apps/traffic_bronze.py))**
+
+*Objetivo*: Ingerir todo sin descartar nada.
+
 Se conecta a Kafka, consume el flujo binario y lo convierte a texto JSON.
+
 Aplica un esquema estricto y guarda los datos de forma inmutable en Delta Lake.
 
 **3. Capa Silver [traffic_silver.py]()**
+
 *Objetivo*: Limpiar, validar y enriquecer.
+
 Banderas de Calidad: Etiqueta los datos faltantes o corruptos.
+
 Conversión Segura: Transforma textos a Números/Fechas sin que el pipeline explote si encuentra un error.
+
 Reglas de Negocio: Rechaza velocidades menores a 0 o mayores a 160 km/h. Rechacha eventos que lleguen más de 10 minutos en el futuro.
+
 Operaciones con Estado: Usa Watermarking (marca de agua de 15 minutos) para manejar datos que llegan tarde y elimina duplicados exactos.
+
 Ingeniería de Variables: Crea banderas de "Hora Pico" y categoriza la velocidad (BAJA/MEDIA/ALTA).
 
 **4. Capa Gold [traffic_gold.py]()**
+
 *Objetivo*: Modelado analítico para el negocio.
+
 Transforma los datos limpios de Silver en un Esquema Estrella (Star Schema):
+
 dim_zone: Enriquece las zonas con el tipo de zona (Comercial, Hub de transporte) y el riesgo de tráfico.
+
 dim_road: Enriquece las carreteras con el tipo (Autopista/Ciudad) y el límite de velocidad legal.
+
 fact_traffic: La tabla central de hechos, extrayendo la fecha para optimizar las consultas.
 
 **5. Capa de Servicio ([SQL.txt]() y [commands.txt]())**
+
 Inicializa el Metastore de Hive y el Thrift Server para exponer las tablas de Delta Lake.
+
 Crea Vistas optimizadas para BI (bi_fact_traffic, etc.) asegurando que los tipos de datos sean perfectamente leídos por Power BI.
 
+________________________________________________________________________________________________________________________________________________________________________________________________________________
+## 🚀 Cómo ejecutar el proyecto
+________________________________________________________________________________________________________________________________________________________________________________________________________________
 
-##🚀 Cómo ejecutar el proyecto
-Prerrequisitos
-Docker y Docker Compose instalados y corriendo.
-Python 3.x instalado localmente (para el productor).
-Los contenedores de infraestructura (Spark, Kafka, Hive) deben estar levantados.
-1. Configurar entorno local
+**Prerrequisitos**
+* Docker y Docker Compose instalados y corriendo.
+* Python 3.x instalado localmente (para el productor).
+* Los contenedores de infraestructura (Spark, Kafka, Hive) deben estar levantados.
+
+**1. Configurar entorno local**
 Instala las librerías necesarias para generar los datos falsos:
 
-bash
+Código:
 
-pip install kafka-python faker pytz
-2. Crear el tópico en Kafka
-bash
+        pip install kafka-python faker pytz
+        
+**2. Crear el tópico en Kafka**
 
-docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --create --topic traffic-topic --bootstrap-server kafka:9092 --partitions 3 --replication-factor 1
-3. Ejecutar el Pipeline (En orden)
+Código:
+
+        docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --create --topic traffic-topic --bootstrap-server kafka:9092 --partitions 3 --replication-factor 1
+
+**3. Ejecutar el Pipeline (En orden)**
 Abre terminales separadas en tu contenedor de Spark y ejecuta los trabajos. Espera unos segundos entre cada uno.
 
 Iniciar Capa Bronze:
 
-bash
+Código:
 
 docker exec -it spark-worker /opt/spark/bin/spark-submit --conf spark.jars.ivy=/tmp/.ivy --packages io.delta:delta-spark_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 /opt/spark-apps/traffic_bronze.py
+
 Iniciar Capa Silver:
 
-bash
+Código:
 
-docker exec -it spark-worker /opt/spark/bin/spark-submit --conf spark.jars.ivy=/tmp/.ivy --packages io.delta:delta-spark_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 /opt/spark-apps/traffic_silver.py
+        docker exec -it spark-worker /opt/spark/bin/spark-submit --conf spark.jars.ivy=/tmp/.ivy --packages io.delta:delta-spark_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 /opt/spark-apps/traffic_silver.py
+
 Iniciar Capa Gold:
 
-bash
+Código:
 
-docker exec -it spark-worker /opt/spark/bin/spark-submit --conf spark.jars.ivy=/tmp/.ivy --packages io.delta:delta-spark_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 /opt/spark-apps/traffic_gold.py
-4. Iniciar la generación de datos
+        docker exec -it spark-worker /opt/spark/bin/spark-submit --conf spark.jars.ivy=/tmp/.ivy --packages io.delta:delta-spark_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 /opt/spark-apps/traffic_gold.py
+
+**4. Iniciar la generación de datos**
 Ejecuta esto en tu computadora local (NO dentro de docker) para empezar a enviar datos sucios a Kafka:
 
-bash
+Código:
 
 python traffic_dirty_producer.py
-5. Conexión a Power BI
+
+**5. Conexión a Power BI**
 Usa los comandos detallados en commands.txt para iniciar el Thrift Server y ejecuta las consultas de SQL.txt para crear las vistas que conectará Power BI.
+
+
 ![Image]()
 
 ![Image]()
