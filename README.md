@@ -217,9 +217,9 @@ Transforma los datos limpios de Silver en un ***Esquema Estrella (Star Schema)**
 
 **5. Capa de Servicio ([SQL.txt](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/SQL.txt) y [commands.txt](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/commands.txt))**
 
-Inicializa el Metastore de Hive y el Thrift Server para exponer las tablas de Delta Lake.
+* Inicializa el Metastore de Hive y el Thrift Server para exponer las tablas de Delta Lake.
 
-Crea Vistas optimizadas para BI (bi_fact_traffic, etc.) asegurando que los tipos de datos sean perfectamente leídos por Power BI.
+* Crea Vistas optimizadas para BI (bi_fact_traffic, etc.) asegurando que los tipos de datos sean perfectamente leídos por Power BI.
 
 ________________________________________________________________________________________________________________________________________________________________________________________________________________
 ## 🚀 Cómo ejecutar el proyecto
@@ -304,36 +304,55 @@ ________________________________________________________________________________
 | Spark History	| http://localhost:18080	| Historial de aplicaciones |
 
 
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
-
+____________________________________________________________________________________________________________________________________________________________________________________________________________________________
 ## 👨‍💻 Author
+____________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 **Allan Gonzales (AllGoHer)**
 
 Data Engineer | Streaming Data Engineer | Spark | Kafka | Delta Lake | Databricks | Airflow | Lakehouse Architecture
 
 *"Building scalable real-time data platforms one event at a time."*
+
+📧 Contacto
+Para preguntas, sugerencias o colaboraciones:
+
+Email: [tu-email@dominio.com]
+
+LinkedIn: [tu-linkedin-url]
+
+GitHub: [tu-github-url]
+
+Portfolio: [tu-portfolio-url]
+
+____________________________________________________________________________________________________________________________________________________________________________________________________________________________
+## 🧠 DESARROLLO DEL PROYECTO
+____________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+
