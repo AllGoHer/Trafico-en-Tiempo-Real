@@ -164,13 +164,13 @@ Ingeniería de Variables: Crea banderas de "Hora Pico" y categoriza la velocidad
 
 ☑️**Métricas de Calidad:**
 
-Velocidades en rango válido: ✅
+* Velocidades en rango válido: ✅
 
-Timestamps consistentes: ✅
+* Timestamps consistentes: ✅
 
-IDs únicos: ✅
+* IDs únicos: ✅
 
-Datos corruptos: ❌ (filtrados)
+* Datos corruptos: ❌ (filtrados)
 
 **4. Capa Gold ([traffic_gold.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/apps/traffic_gold.py))**
 
@@ -183,6 +183,12 @@ Transforma los datos limpios de Silver en un ***Esquema Estrella (Star Schema)**
 ***dim_road***: Enriquece las carreteras con el tipo (Autopista/Ciudad) y el límite de velocidad legal.
 
 ***fact_traffic***: La tabla central de hechos, extrayendo la fecha para optimizar las consultas.
+
+**Esquema Estrella (Star Schema)**
+Tabla	Tipo	Clave	Atributos
+dim_zone	Dimensión	city_zone	zone_type, traffic_risk
+dim_road	Dimensión	road_id	road_type, speed_limit
+fact_traffic	Hechos	(vehicle_id, event_ts)	speed, congestion_level, weather, hour, peak_flag, speed_band
 
 **5. Capa de Servicio ([SQL.txt](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/SQL.txt) y [commands.txt](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/commands.txt))**
 
