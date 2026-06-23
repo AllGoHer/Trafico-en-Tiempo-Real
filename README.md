@@ -110,7 +110,7 @@ ________________________________________________________________________________
 
 El pipeline está dividido en scripts modulares que representan las diferentes etapas de la vida de los datos:
 
-**1. Simulación de Datos [traffic_dirty_producer.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/producer/traffic_dirty_producer.py)**
+**1. Simulación de Datos ([traffic_dirty_producer.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/producer/traffic_dirty_producer.py))**
 
 Este script simula la dura realidad del mundo real de los datos.
 
@@ -136,7 +136,7 @@ Se conecta a Kafka, consume el flujo binario y lo convierte a texto JSON.
 
 Aplica un esquema estricto y guarda los datos de forma inmutable en Delta Lake.
 
-**3. Capa Silver [traffic_silver.py]()**
+**3. Capa Silver [traffic_silver.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/apps/traffic_silver.py)**
 
 *Objetivo*: Limpiar, validar y enriquecer.
 
@@ -173,9 +173,13 @@ ________________________________________________________________________________
 ________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 **Prerrequisitos**
+
 * Docker y Docker Compose instalados y corriendo.
+  
 * Python 3.x instalado localmente (para el productor).
+  
 * Los contenedores de infraestructura (Spark, Kafka, Hive) deben estar levantados.
+
 
 **1. Configurar entorno local**
 Instala las librerías necesarias para generar los datos falsos:
@@ -191,13 +195,14 @@ Código:
         docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --create --topic traffic-topic --bootstrap-server kafka:9092 --partitions 3 --replication-factor 1
 
 **3. Ejecutar el Pipeline (En orden)**
+
 Abre terminales separadas en tu contenedor de Spark y ejecuta los trabajos. Espera unos segundos entre cada uno.
 
 Iniciar Capa Bronze:
 
 Código:
 
-docker exec -it spark-worker /opt/spark/bin/spark-submit --conf spark.jars.ivy=/tmp/.ivy --packages io.delta:delta-spark_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 /opt/spark-apps/traffic_bronze.py
+         docker exec -it spark-worker /opt/spark/bin/spark-submit --conf spark.jars.ivy=/tmp/.ivy --packages io.delta:delta-spark_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 /opt/spark-apps/traffic_bronze.py
 
 Iniciar Capa Silver:
 
@@ -212,14 +217,16 @@ Código:
         docker exec -it spark-worker /opt/spark/bin/spark-submit --conf spark.jars.ivy=/tmp/.ivy --packages io.delta:delta-spark_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 /opt/spark-apps/traffic_gold.py
 
 **4. Iniciar la generación de datos**
+
 Ejecuta esto en tu computadora local (NO dentro de docker) para empezar a enviar datos sucios a Kafka:
 
 Código:
 
-python traffic_dirty_producer.py
+        python traffic_dirty_producer.py
 
 **5. Conexión a Power BI**
-Usa los comandos detallados en commands.txt para iniciar el Thrift Server y ejecuta las consultas de SQL.txt para crear las vistas que conectará Power BI.
+
+Usa los comandos detallados en [commands.txt]() para iniciar el Thrift Server y ejecuta las consultas de [SQL.txt]() para crear las vistas que conectará Power BI.
 
 
 ![Image]()
