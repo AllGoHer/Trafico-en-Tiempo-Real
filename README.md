@@ -1,4 +1,4 @@
-# 🚦Trafico-en-Tiempo-Real
+# 🚦Analisis del Trafico-en-Tiempo-Real
 
 ![image](https://github.com/user-attachments/assets/83557ea5-ad23-4092-897a-ece9f663089e)
 
@@ -149,6 +149,28 @@ Reglas de Negocio: Rechaza velocidades menores a 0 o mayores a 160 km/h. Rechach
 Operaciones con Estado: Usa Watermarking (marca de agua de 15 minutos) para manejar datos que llegan tarde y elimina duplicados exactos.
 
 Ingeniería de Variables: Crea banderas de "Hora Pico" y categoriza la velocidad (BAJA/MEDIA/ALTA).
+
+
+☑️**Pipeline de Limpieza:**
+
+| Etapa |	Operación	| Técnica |
+|-------|-----------|---------|
+| 1	|Calidad de Datos |	Flags: MISSING_VEHICLE, MISSING_TIME, CORRUPT_JSON |
+| 2 |	Tipado Seguro |	CAST con manejo de nulos (speed → int) |
+| 3	| Reglas de Negocio	| Validación: speed 0-160 km/h, timestamp ≤ now + 10min |
+| 4	| Watermarking |	Tolerancia de 15 minutos para datos tardíos |
+| 5	| Deduplicación	| Eliminación de duplicados por (vehicle_id, event_ts) |
+| 6	| Feature Engineering	| hour, peak_flag, speed_band (LOW/MEDIUM/HIGH) |
+
+☑️**Métricas de Calidad:**
+
+Velocidades en rango válido: ✅
+
+Timestamps consistentes: ✅
+
+IDs únicos: ✅
+
+Datos corruptos: ❌ (filtrados)
 
 **4. Capa Gold ([traffic_gold.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/apps/traffic_gold.py))**
 
