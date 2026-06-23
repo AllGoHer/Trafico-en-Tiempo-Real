@@ -109,7 +109,7 @@ ________________________________________________________________________________
 
 El pipeline está dividido en scripts modulares que representan las diferentes etapas de la vida de los datos:
 
-**1. Simulación de Datos [traffic_dirty_producer.py]()**
+**1. Simulación de Datos [traffic_dirty_producer.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/producer/traffic_dirty_producer.py)**
 
 A diferencia de los tutoriales básicos, este script simula la dura realidad del mundo real.
 
