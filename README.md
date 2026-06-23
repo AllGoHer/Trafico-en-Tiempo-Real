@@ -111,7 +111,7 @@ El pipeline está dividido en scripts modulares que representan las diferentes e
 
 **1. Simulación de Datos [traffic_dirty_producer.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/producer/traffic_dirty_producer.py)**
 
-A diferencia de los tutoriales básicos, este script simula la dura realidad del mundo real.
+Este script simula la dura realidad del mundo real.
 
 70% Datos Limpios: Eventos realistas de tráfico (IDs de vehículos, velocidad, zonas, clima).
 30% Datos Sucios: Inyecta anomalías intencionales para probar el pipeline:
@@ -120,27 +120,33 @@ Eventos en el futuro (errores de reloj en sensores).
 Tipos de datos incorrectos (Texto en vez de Números).
 Deriva de esquema (Columnas inesperadas).
 JSONs corruptos (Datos inparseables).
-2. Capa Bronze (traffic_bronze.py)
-Objetivo: Ingerir todo. Aquí no se descarta nada.
+
+**2. Capa Bronze [traffic_bronze.py]()**
+*Objetivo*: Ingerir todo. Aquí no se descarta nada.
 Se conecta a Kafka, consume el flujo binario y lo convierte a texto JSON.
 Aplica un esquema estricto y guarda los datos de forma inmutable en Delta Lake.
-3. Capa Silver (traffic_silver.py)
-Objetivo: Limpiar, validar y enriquecer.
+
+**3. Capa Silver [traffic_silver.py]()**
+*Objetivo*: Limpiar, validar y enriquecer.
 Banderas de Calidad: Etiqueta los datos faltantes o corruptos.
 Conversión Segura: Transforma textos a Números/Fechas sin que el pipeline explote si encuentra un error.
 Reglas de Negocio: Rechaza velocidades menores a 0 o mayores a 160 km/h. Rechacha eventos que lleguen más de 10 minutos en el futuro.
 Operaciones con Estado: Usa Watermarking (marca de agua de 15 minutos) para manejar datos que llegan tarde y elimina duplicados exactos.
 Ingeniería de Variables: Crea banderas de "Hora Pico" y categoriza la velocidad (BAJA/MEDIA/ALTA).
-4. Capa Gold (traffic_gold.py)
-Objetivo: Modelado analítico para el negocio.
+
+**4. Capa Gold [traffic_gold.py]()**
+*Objetivo*: Modelado analítico para el negocio.
 Transforma los datos limpios de Silver en un Esquema Estrella (Star Schema):
 dim_zone: Enriquece las zonas con el tipo de zona (Comercial, Hub de transporte) y el riesgo de tráfico.
 dim_road: Enriquece las carreteras con el tipo (Autopista/Ciudad) y el límite de velocidad legal.
 fact_traffic: La tabla central de hechos, extrayendo la fecha para optimizar las consultas.
-5. Capa de Servicio (SQL.txt y commands.txt)
+
+**5. Capa de Servicio ([SQL.txt]() y [commands.txt]())**
 Inicializa el Metastore de Hive y el Thrift Server para exponer las tablas de Delta Lake.
 Crea Vistas optimizadas para BI (bi_fact_traffic, etc.) asegurando que los tipos de datos sean perfectamente leídos por Power BI.
-🚀 Cómo ejecutar el proyecto
+
+
+##🚀 Cómo ejecutar el proyecto
 Prerrequisitos
 Docker y Docker Compose instalados y corriendo.
 Python 3.x instalado localmente (para el productor).
