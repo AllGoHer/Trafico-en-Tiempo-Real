@@ -136,7 +136,7 @@ Se conecta a Kafka, consume el flujo binario y lo convierte a texto JSON.
 
 Aplica un esquema estricto y guarda los datos de forma inmutable en Delta Lake.
 
-**3. Capa Silver [traffic_silver.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/apps/traffic_silver.py)**
+**3. Capa Silver ([traffic_silver.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/apps/traffic_silver.py))**
 
 *Objetivo*: Limpiar, validar y enriquecer.
 
@@ -150,17 +150,17 @@ Operaciones con Estado: Usa Watermarking (marca de agua de 15 minutos) para mane
 
 Ingeniería de Variables: Crea banderas de "Hora Pico" y categoriza la velocidad (BAJA/MEDIA/ALTA).
 
-**4. Capa Gold [traffic_gold.py]()**
+**4. Capa Gold ([traffic_gold.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/apps/traffic_gold.py))**
 
 *Objetivo*: Modelado analítico para el negocio.
 
-Transforma los datos limpios de Silver en un Esquema Estrella (Star Schema):
+Transforma los datos limpios de Silver en un ***Esquema Estrella (Star Schema)***:
 
-dim_zone: Enriquece las zonas con el tipo de zona (Comercial, Hub de transporte) y el riesgo de tráfico.
+***dim_zone***: Enriquece las zonas con el tipo de zona (Comercial, Hub de transporte) y el riesgo de tráfico.
 
-dim_road: Enriquece las carreteras con el tipo (Autopista/Ciudad) y el límite de velocidad legal.
+***dim_road***: Enriquece las carreteras con el tipo (Autopista/Ciudad) y el límite de velocidad legal.
 
-fact_traffic: La tabla central de hechos, extrayendo la fecha para optimizar las consultas.
+***fact_traffic**: La tabla central de hechos, extrayendo la fecha para optimizar las consultas.
 
 **5. Capa de Servicio ([SQL.txt]() y [commands.txt]())**
 
