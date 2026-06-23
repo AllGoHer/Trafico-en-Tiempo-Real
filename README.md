@@ -459,60 +459,112 @@ Código:
              KAFKA_CLUSTERS_0_NAME: local
              KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
 
-
-### Ahora paso a explicar el código del docker-compose por cada container creado.
+____________________________________________________________________________________________________________________________________________________________________________________________________________________________
+### 📣Ahora paso a explicar el código del docker-compose por cada container creado.
 
 **1. HIVE METASTORE DATABASE (El Cerebro del sistema)**
+
 •	La tecnología: Usas la imagen oficial de PostgreSQL (postgres:13).
+
 •	El propósito: Almacena los "Metadatos". No guarda los datos reales. Guarda qué tablas existen, cuántas particiones tienen y cuáles son los tipos de datos. Sin esto, Spark no sabe cómo leer tus datos.
+
 •	Variables de entorno: Configura el usuario, la contraseña y el nombre de la base de datos.
+
 •	Puerto 5435: Exposición a tu computadora para que puedas entrar a ver la base de datos con herramientas como DBeaver o DataGrip.
+
+
 **2. HIVE METASTORE SERVICE (El Traductor)**
+
 •	La tecnología: Usas la imagen oficial de Apache Hive 3.1.3.
+
 •	El propósito: Es el cerebro motor de la vieja escuela. Cuando tú escribes spark.sql("SELECT * FROM tabla"), Spark le pregunta a este servicio: "¿Dónde están físicamente los datos de esa tabla?". El Metastore le responde: "Están en el Worker 1, particiones 1 al 10".
+
 •	depends_on - postgres-metastore: Garantiza que Hive no intente arrancar hasta que la base de datos PostgreSQL esté 100% levantada. Si arrancan al mismo tiempo, Hive fallará porque no sabe quién es quién manda.
+
 •	IS_RESUME: "false": Si Hive se cae y lo reinicias, empieza desde cero. Es vital en clústers estáticos. Si estuviera en "true", intentar recuperar el estado anterior a veces rompe el clúster.
+
 •	Puerto 9083: El puerto por defecto por el que escucha peticiones de Spark o Hive.
+
 •	Los Volumes:
+
 o	hive-site.xml: Sobreescribe el archivo de configuración nativo de Hive para que se conecte a tu PostgreSQL, o a un S3/MinIO si estás usando el optimizador de KRaft.
+
 o	warehouse: Es la carpeta donde se guardan los datos reales si usaras Hive nativo. Aquí es donde Spark escribe los datos procesados.
+
 •	**El nombre de la variable SERVICE_NAME: metastore: Es un identificador interno. En sistemas Hadoop clásicos, puedes tener varios Metastores (uno para desarrollo, otro para producción). Aquí tienes uno solo.
+
+
 **3. SPARK MASTER (El Gerente del clúster)**
+
 •	La tecnología: Usas la imagen de Apache Spark 3.5.1.
+
 •	El propósito: Es el "Director de Orquestación". Asigna las tareas a los Workers y mantiene el estado global de la aplicación Spark.
+
 •	**El comando command: Le dice a la máquina: "Arranca el proceso Maestro y quédate mirando los logs".
+
 •	Puerto 8080: Exposición del servidor web de la interfaz de usuario de Spark.
+
 •	Puerto 7077: EL PUERTO CLAVE DE COMUNICACIÓN INTERNA. Los Workers usarán este puerto para reportarse con el Master y pedir trabajo.
+
 •	Los Volumes:
+
 o	warehouse: Comparte la carpeta de datos con los Workers. Si el Master necesita procesar algo, lo hace directamente en este directorio sin pasar por la red. A esto se le llama Compute o Shuffle I/O Local. Es extremadamente rápido.
+
 o	apps: Donde pones tus scripts .py de Airflow o Scala.
+
 o	spark-ivy: Almacena las dependencias de Java (la librería de Spark) de forma cacheada para no descargarlas cada vez que mandas un trabajo.
+
 •	hostname: spark-master: Fija el nombre de la máquina. Los Workers lo usarán para conectarse al puerto 7077.
+
 **4. SPARK WORKER (Los Operarios)**
+
 •	La tecnología: Misma versión de Spark (3.5.1).
+
 •	El propósito: Son los que ejecutan el código real (Transformaciones, Joins, GroupBys). Son los que consumen la memoria y la CPU.
+
 •	**El comando command: Le dice al Worker: "Conéctate al Master en el puerto 7077. Usa 2 núcleos (cores) y 2GB de RAM". "Quédate mirando los logs".
+
 •	Puertos del Worker:
+
 o	4040: Puerto interno por si un trabajo se desborda.
+
 o	10000: Puerto para el backend del Spark UI (si lo usas).
+
 o	8081: Puerto por defecto para métricas internas.
+
 •	depends_on - spark-master: Un Worker no puede trabajar sin un Master vivo. Tiene que esperar a que el Master esté 100% arriba.
+
+
 **5. KAFKA (El Transportador)**
+
 •	La tecnología: Usas apache/kafka:latest (Modo KRaft).
+
 •	El propósito: Mover datos masivos a velocidad extrema entre sistemas diferentes, sin que nadie pierda datos. En este entorno, suele usarse para transportar los datos crudos antes de que Spark los procese.
+
 •	KRaft (La innovación): Tradicionalmente, Kafka necesitaba un clúster de ZooKeeper aparte solo para saber quién es el "Jefe" (Controller). KRaft elimina ZooKeeper. Aquí ves cómo configurar el modo combinado: Este único contenedor actúa como nodo de red (broker) Y como "Jefe" (controller) al mismo tiempo.
+
 •	Puertos:
+
 o	9092: Usado para la comunicación interna entre los contenedores Spark.
+
 o	29092: Expuesto a tu computadora local (host.docker.internal:29092) para que tus scripts de Python en Windows puedan leer o escribir en Kafka sin instalar Kafka en tu PC.
+
 •	**CONTROLLER (Puerto 9093): Es un canal oculto que Kafka usa internamente para que los nodos se pongan de acuerdo en cuanto a quién es el "Jefe".
+
 •	ADVERTISED_LISTENERS: Aquí está el truco de red. Si te conectas desde Windows, Kafka te dirá: "Yo soy 'host.docker.internal:29092, conéctate por ahí". Si te conectas internamente (Docker a Docker), te dirá: "Yo soy 'kafka:9092, conéctate aquí".
+
 •	**KAFKA_LOG_DIRS: Donde Kafka guarda internamente los datos en el contenedor (en /tmp/...).
+
+
 **6. KAFKA UI (El Visor)**
+
 •	La tecnología: Una herramienta web de terceros (provectuslabs/kafka-ui:Puerto 8090 en tu código).
+
 •	**depends_on - kafka: No tiene sentido arrancar la interfaz si Kafka no existe.
+
 •	**KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092: Le dice a la UI: "Para ver los tópicos, conéctate internamente al puerto interno de Kafka".
 
-
+____________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 4.	En VSCode creamos la carpeta hive-conf y, dentro de ella creamos el archivo hive-site.xml ingresándole el siguiente código.
 
