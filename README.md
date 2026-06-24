@@ -753,6 +753,7 @@ Esta función es clave: simula 9 tipos diferentes de errores que podrían ocurri
 
 ![Image](https://github.com/user-attachments/assets/9f8676e2-6e8b-476b-9911-19c271a11360)
 
+____________________________________________________________________________________________________________________________________________________________________________________________________
 **🔄 Bucle Principal de Producción**
 
 ![Image](https://github.com/user-attachments/assets/25162624-fa7a-4dfd-9012-69e6a360485d)
@@ -788,7 +789,7 @@ Este productor se usa típicamente para:
  
 Este código es excelente para entrenar sistemas de detección de anomalías y probar cómo reaccionan las aplicaciones ante datos impuros.
 
-
+______________________________________________________________________________________________________________________________________________________
 🧠 ¿Qué pasa internamente en Kafka?
 
 Tú estás enviando dos tipos de estructuras al tópico traffic-topic:
@@ -1087,6 +1088,7 @@ A continuación, explico cada bloque del código al detalle:
 
 •	ArrayType, MapType.
 
+__________________________________________________________________________________________________________________________________________________________________________________________________________________________
 **🚀 CONFIGURACIÓN DE SPARK SESSION**
 
 ![Image](https://github.com/user-attachments/assets/81e126b4-be2b-45ee-bf81-6441409512af)
@@ -1152,6 +1154,7 @@ Configura el nivel de logging:
 
 •	Otras opciones: "ERROR", "INFO", "DEBUG", "TRACE".
 
+__________________________________________________________________________________________________________________________________________
 **📡 LECTURA DEL STREAM DE KAFKA**
 
 ![Image](https://github.com/user-attachments/assets/9babb8b5-4804-473b-8ab2-aa4b6994095f)
@@ -1194,6 +1197,7 @@ Ejecuta la carga del DataFrame de streaming:
 
 •	Todavía NO está procesando datos, solo definió la fuente.
 
+_______________________________________________________________________________________________________________________________________________________________________________________________
 #### 🔄 TRANSFORMACIÓN DE DATOS
 
 ![Image](https://github.com/user-attachments/assets/0c6e3c59-9cfe-42ff-a26c-66591ca43c44)
@@ -1208,7 +1212,7 @@ Convierte y selecciona campos:
 
 •	Resultado: DataFrame con dos columnas: raw_json (string) y kafka_timestamp.
 
-
+_______________________________________________________________________________________________________________________________________________________________________________________________________________________
 #### 📋 DEFINICIÓN DEL ESQUEMA
 
 ![Image](https://github.com/user-attachments/assets/c23078a8-d4aa-4242-a384-e75cadbb4e44)
@@ -1223,23 +1227,23 @@ Define el esquema para el JSON de tráfico:
 
 •	Campos:
 
-      o	vehicle_id - String (ID del vehículo).
+o	vehicle_id - String (ID del vehículo).
 	  
-      o	road_id - String (ID de la carretera).
+o	road_id - String (ID de la carretera).
 	  
-      o	city_zone - String (Zona de la ciudad).
+o	city_zone - String (Zona de la ciudad).
 	  
-      o	speed - String ⚠️ (Velocidad - definida como String para manejar datos sucios).
+o	speed - String ⚠️ (Velocidad - definida como String para manejar datos sucios).
 	  
-      o	congestion_level - Integer (Nivel de congestión 1-5).
+o	congestion_level - Integer (Nivel de congestión 1-5).
 	  
-      o	weather - String (Condición climática).
+o	weather - String (Condición climática).
 	  
-      o	event_time - String (Timestamp del evento).
+o	event_time - String (Timestamp del evento).
 	  
 📌Nota importante: speed es StringType() para manejar valores como "FAST" o null que genera el productor.
 
-
+_________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 #### 🔍 PARSEO DEL JSON
 
@@ -1291,7 +1295,7 @@ Después:
 | raw_json | kafka_timestamp | vehicle_id | road_id | speed | ...
 |----------|-----------------|------------|---------|-------|-
 
-
+_______________________________________________________________________________________________________________________________________________________________________________________________________________________
 #### 💾 ESCRITURA EN DELTA LAKE (BRONZE)
 
 ![Image](https://github.com/user-attachments/assets/cb5f29f8-b1d4-443d-a135-b97dfd4f2ac7)
@@ -1330,6 +1334,7 @@ Inicia el streaming:
 
 •	Al guardarse en la variable bronze_query, podrías detenerlo después con bronze_query.stop().
 
+_____________________________________________________________________________________________________________________________________________________________________________________________________________________
 #### 🔁 ESPERA INDEFINIDA
 
 ![Image](https://github.com/user-attachments/assets/cfaff03c-97f1-43d5-a07e-af1a655372c4)
@@ -1439,16 +1444,20 @@ spark.jars.ivy=/tmp/.ivy - Especifica dónde Spark debe guardar las dependencias
 
 Esta es la parte más importante. Descarga e incluye librerías externas necesarias. 
 
-Paquete 1: Delta Lake 
+**Paquete 1: Delta Lake** 
 
-io.delta:delta-spark_2.12:3.2.0                                                                                                                                                                                                                                   
+io.delta:delta-spark_2.12:3.2.0                                                                                                                                                                                            
+
+
 **Formato:** groupId:artifactId:version
+
 
 | Componente | Significado |
 |------------|-------------|
 | io.delta | Grupo (organización) |
 | delta-spark_2.12 | Nombre del artefacto (versión de Scala 2.12) |
 | 3.2.0	| Versión del paquete |
+
 
 **Paquete 2: Kafka Connector**
 
