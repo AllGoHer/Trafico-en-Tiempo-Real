@@ -1348,26 +1348,7 @@ Espera hasta que el stream termine:
 __________________________________________________________________________________________________________________________________________________________________________________________________________________________
 #### 🎯 ARQUITECTURA COMPLETA
 
-
-Kafka (traffic-topic) (Binario)
-
-    ↓
-	
-Spark ReadStream 
-
-    ↓
-	
-JSON Parse (con esquema flexible)
-
-    ↓
-	
-Data Aplanamiento
-
-    ↓
-	
-Delta Lake (Guardar crudo + metadata = Bronze layer)
-
-
+![Image](https://github.com/user-attachments/assets/bab8628e-8507-4232-ac7d-0f0412078d8b)
 
 * Volviendo al proceso del proyecto, abrimos el spark master en el navegador web y escribimos localhost:8080 
 
@@ -1389,6 +1370,7 @@ Código:
 
         docker exec -it spark-worker /opt/spark/bin/spark-submit --conf spark.jars.ivy=/tmp/.ivy --packages io.delta:delta-spark_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 /opt/spark-apps/traffic_bronze.py
 
+_____________________________________________________________________________________
 ### 🧠 Explicación del código.
 
 **🎯 VISIÓN GENERAL DEL COMANDO**
@@ -1403,7 +1385,7 @@ Este comando hace lo siguiente:
    
 4.	Ejecuta tu script traffic_bronze.py
 
-
+________________________________________________________________________________________
 **📖 DESGLOSE LÍNEA POR LÍNEA**
 
 1️⃣ docker exec -it spark-worker
