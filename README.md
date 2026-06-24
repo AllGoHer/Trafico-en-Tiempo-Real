@@ -1656,8 +1656,9 @@ Código:
 
         spark.streams.awaitAnyTermination()
 
-
+___________________________________________________________________________________________________________________________________________________________________________________________________________________
 ### 🧠 EXPLICACIÓN DEL CÓDIGO
+___________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 📦 IMPORTS - Librerías necesarias
 
@@ -1710,7 +1711,7 @@ Conecta al cluster Spark en el puerto 7077 del master.
 
 •	Configura los logs para que solo muestre advertencias (WARN) y errores, ignorando la infinidad de logs de INFO que genera Spark en segundo plano.
 
-
+____________________________________________________________________________________________________________________________________________________________________________________________
 **📡 LECTURA DEL STREAM BRONZE**
 
 Código:
@@ -1731,6 +1732,7 @@ Código:
 
 📌 Diferencia clave: El productor escribe en Bronze, y este script detecta automáticamente los nuevos archivos y los procesa.
 
+_____________________________________________________________________________________________________________________________________________________________________________________________________
 **🏷️ DATA QUALITY FLAG (Bandera de Calidad)**
 
 Código:
@@ -1830,6 +1832,7 @@ Código:
 
 •	.filter(...): Aquí es donde se descarta la basura. Solo dejan pasar las filas que pasaron las tres pruebas:
 
+_______________________________________________________________________________________________________________________________________________________________
 | Condición | Significado |
 |-----------|-------------|
 | dq_flag == "OK" |	No hay problemas de calidad (ID válido, timestamp presente, no corrupto) |
@@ -1837,7 +1840,7 @@ Código:
 | time_valid == 1 | Fecha no es futura (dentro de margen de 10 min) |
 | Resultado: | Solo datos limpios y válidos pasan a la siguiente etapa. |
 
-
+___________________________________________________________________________________________________________________________________________________________________
 **⏰ MANEJO DE DATOS TARDÍOS (Watermark)**
 
 Código:
@@ -1847,7 +1850,7 @@ Código:
 
 •	.withWatermark("event_ts", "15 minutes"): En streaming, los datos llegan desordenados (un evento de las 8:00 puede llegar a las 8:20 por problemas de red). Esto le dice a Spark: "Establece una marca de agua de 15 minutos sobre la columna event_ts". Esto permite que Spark limpie su memoria interna y sepa cuándo un dato ha llegado demasiado tarde para ser procesado en agregaciones temporales.
 
-
+_______________________________________________________________________________________________________________________________________________________________________
 **🗑️ DEDUPLICACIÓN**
 
 Código:
@@ -1860,7 +1863,7 @@ Código:
 
 •	**Nota técnica:** En streaming, dropDuplicates requiere obligatoriamente que se haya definido un <mark>withWatermark</mark> antes, de lo contrario Spark lanzará un error, porque necesita saber cuándo puede olvidar los eventos antiguos en su memoria.
 
-
+__________________________________________________________________________________________________________________________________________________________________________________________________________________________
 **🎨 INGENIERÍA DE CARACTERÍSTICAS (Feature Engineering)**
 
 Código:
@@ -1926,7 +1929,7 @@ Código:
 
 •	.start(): Dispara la ejecución en segundo plano.
 
-
+__________________________________________________________________________________________________________________________________________________________________________________________________________________________
 **🔥 MANTENER EL PROCESO VIVO**
 
 Código:
@@ -1939,25 +1942,7 @@ Espera indefinidamente hasta que el stream termine o sea detenido.
 ___________________________________________________________________________________________________________________________________________________________________________________________________________________________
 **📊 FLUJO DE TRANSFORMACIONES**
 
-
-Bronze Data
-    ↓ [Data Quality Flag]
-MISSING_VEHICLE | MISSING_TIME | CORRUPT_JSON | OK
-    ↓ [Type Casting]
-speed_int (int) | event_ts (timestamp)
-    ↓ [Business Rules]
-speed_valid (0/1) | time_valid (0/1)
-    ↓ [Filter]
-Solo registros con: dq_flag=OK, speed_valid=1, time_valid=1
-    ↓ [Watermark]
-Datos tardíos > 15 min son descartados
-    ↓ [Deduplication]
-Elimina duplicados por (vehicle_id, event_ts)
-    ↓ [Feature Engineering]
-hour | peak_flag | speed_band
-    ↓
-Silver Data (Limpio y Enriquecido)
-
+![Image](https://github.com/user-attachments/assets/75326cc0-9e04-4889-891b-4e7779b224c3)
 
 
 * Ahora volviendo al proceso de ejecución,regresamos a la terminal y corremos el siguiente código.
@@ -2089,7 +2074,7 @@ Código:
 
         spark.streams.awaitAnyTermination()
 
-
+__________________________________________________________________________________________________________________________________________________________________________________________________________________________
 ### 🧠 Explicación del código.
 
 Les explico este código línea por línea. Es un pipeline de streaming en Spark que construye una capa Gold siguiendo el modelo estrella (Star Schema) con dimensiones y una tabla de hechos para análisis de tráfico.
@@ -2120,7 +2105,7 @@ Importa SparkSession y todas las funciones de Spark SQL:
 
 Nota: No importa types porque no se definen esquemas explícitos.
 
-
+___________________________________________________________________________________________________________________________________________________________________________________________________________________
 **🚀 CONFIGURACIÓN DE SPARK SESSION**
 
 
@@ -2140,7 +2125,7 @@ Código:
 
 •	Es la misma configuración de clúster y Delta Lake que en las capas anteriores. El único cambio es el .appName("TrafficGoldLayer") para identificar este proceso específico en la interfaz de monitoreo.
 
-
+_______________________________________________________________________________________________________________________________________________________________________________________________________________________
 **📡 LECTURA DE LA CAPA SILVER**
 
 Código:
@@ -2497,7 +2482,7 @@ Código:
         --conf spark.sql.warehouse.dir=/tmp/spark-warehouse
 
 
-
+_________________________________________________________________________________________________________________________________________________________________________________________________________________________
 **📖 Desglose Línea por Línea**
 
 1. Comando Principal:
@@ -2683,7 +2668,7 @@ Código:
 
 ___________________________________________________________________________________________________________________________________________________________________________________________________________________________
 #### 🧠 Explicación del código.
-
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
 🎯 ¿Qué hace este código?
 
 Crea una VISTA (VIEW) llamada bi_fact_traffic basada en la tabla fact_traffic, pero con:
@@ -2747,7 +2732,7 @@ sql:
      CAST(road_id AS STRING) AS road_id
 
 Similar: Asegura que sea STRING.
-________________________________________
+_____________________________________________________________________________________________________________________________________________________________________________________________________
 Columna 3: City Zone
 
 sql:
@@ -2755,7 +2740,7 @@ sql:
      CAST(city_zone AS STRING) AS city_zone
 
 Similar: Asegura que sea STRING.
-________________________________________
+________________________________________________________________________________________________________________________________________________________________________________________________________
 Columna 4: Speed (Velocidad)
 
 sql:
@@ -2769,7 +2754,7 @@ sql:
 •	AS speed → Renombra a speed (más claro que speed_int).
 
 •	Propósito: Permite cálculos precisos de promedio, sumas, etc.
-________________________________________
+______________________________________________________________________________________________________________________________________________________________________________________________________________
 Columna 5: Congestion Level
 
 sql:
@@ -2781,7 +2766,7 @@ CAST(congestion_level AS INT) AS congestion_level
 •	CAST(...AS INT) → Convierte a entero.
 
 •	Propósito: Niveles de congestión son números enteros (1-5)
-________________________________________
+____________________________________________________________________________________________________________________________________________________________________________________________________________________
 Columna 6: Event Time
 
 sql:
@@ -2795,7 +2780,7 @@ sql:
 •	AS event_time → Renombra a event_time (más claro que event_ts).
 
 •	Propósito: Para análisis temporales y series de tiempo.
-________________________________________
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
 Columna 7: Peak Flag
 
 sql:
@@ -2809,7 +2794,7 @@ sql:
 •	Alternativa: Podría ser BOOLEAN (verdadero/falso).
 
 •	Nota: En tu código original era INT (1/0), ahora es STRING.
-________________________________________
+__________________________________________________________________________________________________________________________________________________________________________________________________________________________
 Columna 8: Speed Band
 
 sql:
@@ -2817,7 +2802,7 @@ sql:
      CAST(speed_band AS STRING) AS speed_band
 
 Similar: Asegura que sea STRING (LOW/MEDIUM/HIGH).
-________________________________________
+_________________________________________________________________________________________________________________________________________________________________________________________________________________________
 Columna 9: Weather
 
 sql:
@@ -2825,7 +2810,7 @@ sql:
      CAST(weather AS STRING) AS weather
 
 Similar: Asegura que sea STRING.
-________________________________________
+________________________________________________________________________________________________________________________________________________________________________________________________________________________
 Columna 10: Event Date
 
 sql:
@@ -2839,7 +2824,7 @@ sql:
 •	AS event_date → Renombra a event_date (más descriptivo).
 
 •	Propósito: Agregaciones diarias, particionamiento, etc.
-________________________________________
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
 Columna 11: Event Hour
 
 sql:
@@ -2972,7 +2957,7 @@ Código:
 ¿Qué hace?
 
 Descarga los archivos JAR de Delta Lake desde el repositorio central de Maven y los guarda en el directorio actual.
-________________________________________
+__________________________________________________________________________________________________________________________________________________________________________________________________________________________
 Desglose Rápido:
 
 | Parte | Significado |
@@ -2982,7 +2967,7 @@ Desglose Rápido:
 | delta-spark_2.12-3.2.0.jar | Librería principal de Delta Lake para Spark (versión 3.2.0, compilada para Scala 2.12) |
 | delta-storage-3.2.0.jar | Librería de almacenamiento de Delta (manejo de archivos) |
 
-________________________________________
+__________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 ¿Para qué sirve?
 
@@ -3020,7 +3005,7 @@ Código:
 		/opt/spark/sbin/start-thriftserver.sh
 
 Script que inicia el servidor Thrift de Spark.
-________________________________________
+_________________________________________________________________________________________________________________________________________________________________________________________________________________________
 2. Master del Cluster:
 
 Código:
@@ -3028,7 +3013,7 @@ Código:
 		--master spark://spark-master:7077
 
 Conecta al cluster Spark para ejecutar las consultas.
-________________________________________
+__________________________________________________________________________________________________________________________________________________________________________________________________________________________
 3. Extensiones de Spark SQL:
 
 Código:
@@ -3036,7 +3021,7 @@ Código:
         --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension
 
 Habilita comandos de Delta Lake (OPTIMIZE, MERGE, VACUUM, etc.)
-________________________________________
+__________________________________________________________________________________________________________________________________________________________________________________________________________________________
 4. Catálogo de Delta:
 
 Código:
@@ -3044,7 +3029,7 @@ Código:
         --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog
 
 Usa el catálogo de Delta Lake para gestionar tablas.
-________________________________________
+__________________________________________________________________________________________________________________________________________________________________________________________________________________________
 5. Soporte Hive:
 
 Código:
@@ -3052,7 +3037,7 @@ Código:
         --conf spark.sql.catalogImplementation=hive
 
 Usa el catálogo de Hive para metadatos.
-________________________________________
+_________________________________________________________________________________________________________________________________________________________________________________________________________________________
 6. Ubicación del Hive Metastore:
 
 Código:
@@ -3060,7 +3045,7 @@ Código:
         --conf spark.hadoop.hive.metastore.uris=thrift://hive-metastore:9083
 
 Conecta al metastore de Hive para compartir metadatos entre herramientas.
-________________________________________
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
 7. Directorio del Warehouse:
 
 Código:
