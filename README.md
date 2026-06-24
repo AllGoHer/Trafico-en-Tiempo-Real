@@ -1345,17 +1345,26 @@ Espera hasta que el stream termine:
 •	Importante: Sin esto, el programa terminaría inmediatamente y el stream no procesaría nada.
 
 
+__________________________________________________________________________________________________________________________________________________________________________________________________________________________
 #### 🎯 ARQUITECTURA COMPLETA
 
 
 Kafka (traffic-topic) (Binario)
+
     ↓
+	
 Spark ReadStream 
+
     ↓
+	
 JSON Parse (con esquema flexible)
+
     ↓
+	
 Data Aplanamiento
+
     ↓
+	
 Delta Lake (Guardar crudo + metadata = Bronze layer)
 
 
