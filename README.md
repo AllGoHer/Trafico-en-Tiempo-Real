@@ -2715,7 +2715,7 @@ Columna 1: Vehicle ID
 
 sql:
 
-     CAST(vehicle_id AS STRING) AS vehicle_id
+      CAST(vehicle_id AS STRING) AS vehicle_id
 
 ¿Qué hace?
 
@@ -2730,7 +2730,7 @@ Columna 2: Road ID
 
 sql:
 
-     CAST(road_id AS STRING) AS road_id
+      CAST(road_id AS STRING) AS road_id
 
 Similar: Asegura que sea STRING.
 _____________________________________________________________________________________________________________________________________________________________________________________________________
@@ -2738,7 +2738,7 @@ Columna 3: City Zone
 
 sql:
 
-     CAST(city_zone AS STRING) AS city_zone
+      CAST(city_zone AS STRING) AS city_zone
 
 Similar: Asegura que sea STRING.
 ________________________________________________________________________________________________________________________________________________________________________________________________________
@@ -2746,7 +2746,7 @@ Columna 4: Speed (Velocidad)
 
 sql:
 
-     CAST(speed_int AS DOUBLE) AS speed
+      CAST(speed_int AS DOUBLE) AS speed
 
 ¿Qué hace?
 
@@ -2760,7 +2760,7 @@ Columna 5: Congestion Level
 
 sql:
 
-CAST(congestion_level AS INT) AS congestion_level
+      CAST(congestion_level AS INT) AS congestion_level
 
 ¿Qué hace?
 
@@ -2772,7 +2772,7 @@ Columna 6: Event Time
 
 sql:
 
-     CAST(event_ts AS TIMESTAMP) AS event_time
+      CAST(event_ts AS TIMESTAMP) AS event_time
 
 ¿Qué hace?
 
@@ -2786,7 +2786,7 @@ Columna 7: Peak Flag
 
 sql:
 
-     CAST(peak_flag AS STRING) AS peak_flag
+      CAST(peak_flag AS STRING) AS peak_flag
 
 ¿Qué hace?
 
@@ -2800,7 +2800,7 @@ Columna 8: Speed Band
 
 sql:
 
-     CAST(speed_band AS STRING) AS speed_band
+      CAST(speed_band AS STRING) AS speed_band
 
 Similar: Asegura que sea STRING (LOW/MEDIUM/HIGH).
 _________________________________________________________________________________________________________________________________________________________________________________________________________________________
@@ -2808,7 +2808,7 @@ Columna 9: Weather
 
 sql:
 
-     CAST(weather AS STRING) AS weather
+      CAST(weather AS STRING) AS weather
 
 Similar: Asegura que sea STRING.
 ________________________________________________________________________________________________________________________________________________________________________________________________________________________
@@ -2816,7 +2816,7 @@ Columna 10: Event Date
 
 sql:
 
-     CAST(date AS DATE) AS event_date
+      CAST(date AS DATE) AS event_date
 
 ¿Qué hace?
 
@@ -2868,11 +2868,11 @@ ________________________________________________________________________________
 
 sql:
 
-     -- Sin CAST: tipos podrían variar
-     SELECT speed_int FROM fact_traffic  -- Podría ser String o Int
+      -- Sin CAST: tipos podrían variar
+      SELECT speed_int FROM fact_traffic  -- Podría ser String o Int
 
-     -- Con CAST: siempre DOUBLE
-     SELECT CAST(speed_int AS DOUBLE) FROM fact_traffic  -- Siempre número decimal
+      -- Con CAST: siempre DOUBLE
+      SELECT CAST(speed_int AS DOUBLE) FROM fact_traffic  -- Siempre número decimal
 
 
 2. Compatibilidad con Herramientas BI:
@@ -2951,8 +2951,8 @@ Cambia el directorio de trabajo actual a la carpeta /opt/spark/jars dentro del s
 
 Código:
 
-        wget https://repo1.maven.org/maven2/io/delta/delta-spark_2.12/3.2.0/delta-spark_2.12-3.2.0.jar
-        wget https://repo1.maven.org/maven2/io/delta/delta-storage/3.2.0/delta-storage-3.2.0.jar
+         wget https://repo1.maven.org/maven2/io/delta/delta-spark_2.12/3.2.0/delta-spark_2.12-3.2.0.jar
+         wget https://repo1.maven.org/maven2/io/delta/delta-storage/3.2.0/delta-storage-3.2.0.jar
 
 
 ¿Qué hace?
@@ -3051,7 +3051,7 @@ ________________________________________________________________________________
 
 Código:
 
-        --conf spark.sql.warehouse.dir=/opt/spark/warehouse
+         --conf spark.sql.warehouse.dir=/opt/spark/warehouse
 
 Dónde se almacenan las tablas físicamente.
 
