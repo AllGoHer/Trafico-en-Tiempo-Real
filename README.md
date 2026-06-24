@@ -508,9 +508,12 @@ o warehouse: Es la carpeta donde se guardan los datos reales si usaras Hive nati
 •	Puerto 7077: EL PUERTO CLAVE DE COMUNICACIÓN INTERNA. Los Workers usarán este puerto para reportarse con el Master y pedir trabajo.
 
 •	Los Volumes:
-    o warehouse: Comparte la carpeta de datos con los Workers. Si el Master necesita procesar algo, lo hace directamente en este directorio sin pasar por la red. A esto se le llama Compute o Shuffle I/O Local. Es extremadamente rápido.
-    o apps: Donde pones tus scripts .py de Airflow o Scala.
-    o spark-ivy: Almacena las dependencias de Java (la librería de Spark) de forma cacheada para no descargarlas cada vez que mandas un trabajo.
+    
+o warehouse: Comparte la carpeta de datos con los Workers. Si el Master necesita procesar algo, lo hace directamente en este directorio sin pasar por la red. A esto se le llama Compute o Shuffle I/O Local. Es extremadamente rápido.
+    
+o apps: Donde pones tus scripts .py de Airflow o Scala.
+    
+o spark-ivy: Almacena las dependencias de Java (la librería de Spark) de forma cacheada para no descargarlas cada vez que mandas un trabajo.
 
 •	hostname: spark-master: Fija el nombre de la máquina. Los Workers lo usarán para conectarse al puerto 7077.
 
