@@ -488,9 +488,9 @@ ________________________________________________________________________________
 
 •	Los Volumes:
 
-          o	hive-site.xml: Sobreescribe el archivo de configuración nativo de Hive para que se conecte a tu PostgreSQL, o a un S3/MinIO si estás usando el optimizador de KRaft.
+    o	hive-site.xml: Sobreescribe el archivo de configuración nativo de Hive para que se conecte a tu PostgreSQL, o a un S3/MinIO si estás usando el optimizador de KRaft.
 
-         o	warehouse: Es la carpeta donde se guardan los datos reales si usaras Hive nativo. Aquí es donde Spark escribe los datos procesados.
+    o	warehouse: Es la carpeta donde se guardan los datos reales si usaras Hive nativo. Aquí es donde Spark escribe los datos procesados.
 
 •	**El nombre de la variable SERVICE_NAME: metastore: Es un identificador interno. En sistemas Hadoop clásicos, puedes tener varios Metastores (uno para desarrollo, otro para producción). Aquí tienes uno solo.
 
@@ -509,11 +509,11 @@ ________________________________________________________________________________
 
 •	Los Volumes:
 
-          o	warehouse: Comparte la carpeta de datos con los Workers. Si el Master necesita procesar algo, lo hace directamente en este directorio sin pasar por la red. A esto se le llama Compute o Shuffle I/O Local. Es extremadamente rápido.
+    o	warehouse: Comparte la carpeta de datos con los Workers. Si el Master necesita procesar algo, lo hace directamente en este directorio sin pasar por la red. A esto se le llama Compute o Shuffle I/O Local. Es extremadamente rápido.
 
-         o	apps: Donde pones tus scripts .py de Airflow o Scala.
+    o	apps: Donde pones tus scripts .py de Airflow o Scala.
 
-         o	spark-ivy: Almacena las dependencias de Java (la librería de Spark) de forma cacheada para no descargarlas cada vez que mandas un trabajo.
+    o	spark-ivy: Almacena las dependencias de Java (la librería de Spark) de forma cacheada para no descargarlas cada vez que mandas un trabajo.
 
 •	hostname: spark-master: Fija el nombre de la máquina. Los Workers lo usarán para conectarse al puerto 7077.
 
@@ -527,11 +527,12 @@ ________________________________________________________________________________
 
 •	Puertos del Worker:
 
-          o	4040: Puerto interno por si un trabajo se desborda.
+     o	4040: Puerto interno por si un trabajo se desborda.
 
-          o	10000: Puerto para el backend del Spark UI (si lo usas).
+     o	10000: Puerto para el backend del Spark UI (si lo usas).
 
-          o	8081: Puerto por defecto para métricas internas.
+     
+	 o	8081: Puerto por defecto para métricas internas.
 
 •	depends_on - spark-master: Un Worker no puede trabajar sin un Master vivo. Tiene que esperar a que el Master esté 100% arriba.
 
@@ -546,9 +547,9 @@ ________________________________________________________________________________
 
 •	Puertos:
 
-          o	9092: Usado para la comunicación interna entre los contenedores Spark.
+    o	9092: Usado para la comunicación interna entre los contenedores Spark.
 
-          o	29092: Expuesto a tu computadora local (host.docker.internal:29092) para que tus scripts de Python en Windows puedan leer o escribir en Kafka sin instalar Kafka en tu PC.
+    o	29092: Expuesto a tu computadora local (host.docker.internal:29092) para que tus scripts de Python en Windows puedan leer o escribir en Kafka sin instalar Kafka en tu PC.
 
 •	**CONTROLLER (Puerto 9093): Es un canal oculto que Kafka usa internamente para que los nodos se pongan de acuerdo en cuanto a quién es el "Jefe".
 
