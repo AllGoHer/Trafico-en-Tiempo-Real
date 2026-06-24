@@ -523,9 +523,12 @@ o warehouse: Es la carpeta donde se guardan los datos reales si usaras Hive nati
 •	**El comando command: Le dice al Worker: "Conéctate al Master en el puerto 7077. Usa 2 núcleos (cores) y 2GB de RAM". "Quédate mirando los logs".
 
 •	Puertos del Worker:
-    o 4040: Puerto interno por si un trabajo se desborda.
-    o 10000: Puerto para el backend del Spark UI (si lo usas).
-  	o 8081: Puerto por defecto para métricas internas.
+
+o 4040: Puerto interno por si un trabajo se desborda.
+
+o 10000: Puerto para el backend del Spark UI (si lo usas).
+
+o 8081: Puerto por defecto para métricas internas.
 
 •	depends_on - spark-master: Un Worker no puede trabajar sin un Master vivo. Tiene que esperar a que el Master esté 100% arriba.
 
@@ -539,8 +542,10 @@ o warehouse: Es la carpeta donde se guardan los datos reales si usaras Hive nati
 •	KRaft (La innovación): Tradicionalmente, Kafka necesitaba un clúster de ZooKeeper aparte solo para saber quién es el "Jefe" (Controller). KRaft elimina ZooKeeper. Aquí ves cómo configurar el modo combinado: Este único contenedor actúa como nodo de red (broker) Y como "Jefe" (controller) al mismo tiempo.
 
 •	Puertos:
-    o 9092: Usado para la comunicación interna entre los contenedores Spark.
-    o 29092: Expuesto a tu computadora local (host.docker.internal:29092) para que tus scripts de Python en Windows puedan leer o escribir en Kafka sin instalar Kafka en tu PC.
+
+o 9092: Usado para la comunicación interna entre los contenedores Spark.
+
+o 29092: Expuesto a tu computadora local (host.docker.internal:29092) para que tus scripts de Python en Windows puedan leer o escribir en Kafka sin instalar Kafka en tu PC.
 
 •	**CONTROLLER (Puerto 9093): Es un canal oculto que Kafka usa internamente para que los nodos se pongan de acuerdo en cuanto a quién es el "Jefe".
 
