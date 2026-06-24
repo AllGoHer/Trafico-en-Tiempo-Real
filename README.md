@@ -2423,36 +2423,689 @@ Guarda la tabla de hechos en Delta Lake.
 
 ![Image](https://github.com/user-attachments/assets/c33ce119-2985-4f1e-ad8b-03df803db1c8)
 
-![Image]()
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+**🔁 ESPERA INDEFINIDA**
 
-![Image]()
+Código:
 
-![Image]()
+        spark.streams.awaitAnyTermination()
 
-![Image]()
+•	Muy importante aquí: A diferencia de los códigos anteriores donde solo había UN stream corriendo, en este script hemos lanzado TRES streams en paralelo (zone_query, road_query, y fact_query).
 
-![Image]()
+•	Esta línea le dice a Python: "No termines el programa. Quédate dormido aquí indefinidamente hasta que alguno de los tres streams falle o sea detenido manualmente". Si omitieras esta línea, el script de Python terminaría al instante y los tres procesos de escritura morirían.
 
-![Image]()
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+**🏛️ ARQUITECTURA COMPLETA (Medallion + Star Schema)**
 
-![Image]()
+![Image](https://github.com/user-attachments/assets/b11b464f-929d-4038-bea9-2318775fdb64)
 
-![Image]()
+* Ahora volvemos al proceso de ejecución del proyecto y hacemos correr la transformación de oro.
 
-![Image]()
+Código:
 
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
-
-![Image]()
+         docker exec -it spark-worker /opt/spark/bin/spark-submit --conf spark.jars.ivy=/tmp/.ivy --packages io.delta:delta-spark_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 /opt/spark-apps/traffic_gold.py 
 
 
+![Image](https://github.com/user-attachments/assets/805c566f-2ef1-4bd4-8393-f9f03ae3159a)
 
+Ahora verificamos en VSC que se hayan creado las carpetas de hechos y dimensiones (fact_traffic, dim_road y dim_zone).
+
+![Image](https://github.com/user-attachments/assets/200cc4d8-854b-4227-9f17-1f1d99207541)
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+### ![Image](https://github.com/user-attachments/assets/c6a6426a-947d-4418-ba0f-116e2d36675c) METADATA DATABASE 
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Luego volvemos al terminal y abrimos una terminal interactiva (consola de comandos) directamente dentro del contenedor Docker llamado spark-worker. 
+
+Código:
+         
+		docker exec -it spark-worker bash
+
+![Image](https://github.com/user-attachments/assets/b3d67c5e-8e48-4c0a-b122-47889ca82dff)
+
+Código:
+                
+		mkdir -p /tmp/spark-warehouse
+
+Código:
+                
+		chmod -R 777 /tmp/spark-warehouse
+
+
+**🧰 Desglose Rápido del código:**
+
+| Parte | Significado |
+|-------|-------------|
+| chmod | Change Mode - Cambia permisos de archivos/directorios |
+| -R | Recursive - Aplica cambios a TODOS los archivos y subcarpetas dentro |
+| 777 | Permisos: Todos pueden LEER, ESCRIBIR y EJECUTAR |
+| /tmp/spark-warehouse | Directorio objetivo |
+
+
+Ahora nos conectamos a base de datos de **metadatos hive metastore**.
+
+Código:
+
+        /opt/spark/bin/spark-sql \
+        --packages io.delta:delta-spark_2.12:3.2.0 \
+        --conf spark.jars.ivy=/tmp/.ivy \
+        --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension \
+        --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
+        --conf spark.sql.catalogImplementation=hive \
+        --conf spark.hadoop.hive.metastore.uris=thrift://hive-metastore:9083 \
+        --conf spark.sql.warehouse.dir=/tmp/spark-warehouse
+
+
+
+**📖 Desglose Línea por Línea**
+
+1. Comando Principal:
+   
+Código:
+
+        /opt/spark/bin/spark-sql
+		
+¿Qué es? La herramienta de línea de comandos de Spark que permite ejecutar consultas SQL interactivas.
+
+📌 Equivalente a: "Abre una consola SQL de Spark"
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+2. Paquetes Requeridos:
+
+Código:
+             
+		--packages io.delta:delta-spark_2.12:3.2.0
+		
+¿Qué hace? Descarga e incluye Delta Lake para trabajar con tablas Delta.
+
+📌 Necesario porque: Spark no incluye Delta por defecto.
+__________________________________________________________________________________________________________________________________________________________________________________________________________________________
+3. Directorio de Dependencias:
+   
+Código:
+   
+		--conf spark.jars.ivy=/tmp/.ivy
+		
+¿Qué hace? Define dónde Spark guarda las dependencias descargadas (JARs).
+
+📌 Beneficio: Acelera ejecuciones futuras (no descarga siempre lo mismo).
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+4. Extensiones de SQL:
+
+Código:
+
+        --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension
+
+¿Qué hace? Habilita comandos específicos de Delta Lake:
+
+•	MERGE (UPSERT).
+
+•	OPTIMIZE (compactación de archivos).
+
+•	VACUUM (limpieza de archivos viejos).
+
+•	CONVERT TO DELTA (convertir formatos).
+
+📌 Sin esto: No funcionarían los comandos de Delta.
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+5. Catálogo de Spark:
+   
+Código:
+
+        --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog
+		
+¿Qué hace? Configura el catálogo de Spark para usar Delta Catalog en lugar del catálogo predeterminado.
+
+📌 Equivalente a: "Trata las tablas Delta como tablas Spark normales."
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+6. Soporte para Hive:
+   
+Código:
+
+        --conf spark.sql.catalogImplementation=hive
+		
+¿Qué hace? Usa el catálogo de Hive para gestionar metadatos (tablas, columnas, particiones, etc.).
+
+📌 Importante: Permite usar la terminal de Hive y compartir tablas con otras herramientas.
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+7. URI del Hive Metastore:
+
+Código:
+
+        --conf spark.hadoop.hive.metastore.uris=thrift://hive-metastore:9083
+
+¿Qué hace? Conecta al Hive Metastore (el servicio que guarda los metadatos de las tablas).
+
+📌 Ubicación: hive-metastore:9083 es el servicio que corre en tu Docker.
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+8. Directorio del Warehouse:
+
+Código:
+
+       --conf spark.sql.warehouse.dir=/tmp/spark-warehouse
+
+¿Qué hace? Define dónde Spark almacena las tablas de Hive.
+
+📌 Temporal: Al estar en /tmp/, los datos se borran al reiniciar.
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+🏗️ Arquitectura Completa
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+![Image](https://github.com/user-attachments/assets/09869556-8988-44d0-bdf3-f9e8b9505b7e)
+
+Ahora creamos una base de datos llamada traffic.
+
+Código: 
+              
+		 CREATE DATABASE traffic;
+
+![Image](https://github.com/user-attachments/assets/90096d4b-9be5-4db9-88a2-788c0983e3c0)
+
+Código:
+              
+		USE traffic;
+
+![Image](https://github.com/user-attachments/assets/805c226a-7b19-4351-b99d-88b9e9c07ac9)
+
+Código:
+               
+		CREATE TABLE fact_traffic
+
+Código:
+               
+		USING DELTA
+
+Codigo:
+                
+		LOCATION '/opt/spark/warehouse/fact_traffic';
+
+
+![Image](https://github.com/user-attachments/assets/5f1a4a90-2aa6-4fc4-ab5a-77482ad5eb9f)
+
+Código:
+               
+		SELECT COUNT(*) FROM fact_traffic;
+
+
+![Image](https://github.com/user-attachments/assets/fd90269f-72f6-401e-8925-5568bf7d425d)
+
+Código:
+                   
+		CREATE TABLE dim_zone
+        USING DELTA
+        LOCATION '/opt/spark/warehouse/dim_zone';
+
+![Image](https://github.com/user-attachments/assets/6179b204-4415-4764-8e02-4b50df9f11eb)
+
+Código:
+               
+		SELECT COUNT(*) FROM dim_zone;
+
+![Image](https://github.com/user-attachments/assets/a48fab58-4b05-44d4-a235-dfbff7c71e27)
+
+Código:
+                
+		> CREATE TABLE dim_road
+        > USING DELTA
+        > LOCATION '/opt/spark/warehouse/dim_road';
+
+![Image](https://github.com/user-attachments/assets/a7ff7698-e0e5-4e0d-948f-43e4fa863832)
+
+Código:
+               
+		SELECT COUNT(*) FROM dim_road;
+
+![Image](https://github.com/user-attachments/assets/6ead3a77-1f5f-42c4-9fa1-d6ec7f21050f)
+
+* Ahora nos toca crear vistas para Power BI 
+
+Código:
+
+        CREATE VIEW bi_fact_traffic AS
+        > SELECT
+        > CAST(vehicle_id AS STRING) AS vehicle_id,
+        > CAST(road_id AS STRING) AS road_id,
+        > CAST(city_zone AS STRING) AS city_zone,
+        > CAST(speed_int AS DOUBLE) AS speed,
+        > CAST(congestion_level AS INT) AS congestion_level,
+        > CAST(event_ts AS TIMESTAMP) AS event_time,
+        > CAST(peak_flag AS STRING) AS peak_flag,
+        > CAST(speed_band AS STRING) AS speed_band,
+        > CAST(weather AS STRING) AS weather,
+        > CAST(date AS DATE) AS event_date,
+        > CAST(hour AS INT) AS event_hour
+        > FROM fact_traffic;
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+#### 🧠 Explicación del código.
+
+🎯 ¿Qué hace este código?
+
+Crea una VISTA (VIEW) llamada bi_fact_traffic basada en la tabla fact_traffic, pero con:
+
+1.	Tipos de datos explícitos (usando CAST).
+
+2.	Nombres de columnas más claros (usando AS).
+
+3.	Preparación para herramientas BI (Business Intelligence).
+   
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+**📖 Desglose Línea por Línea**
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+1. Creación de la Vista:
+
+sql:
+
+     CREATE VIEW bi_fact_traffic AS
+
+¿Qué hace?
+
+•	CREATE VIEW → Crea una vista (tabla virtual).
+
+•	bi_fact_traffic → Nombre de la vista.
+
+•	AS → Define la consulta que genera la vista.
+
+📌 Características de una VIEW:
+
+•	No almacena datos físicamente.
+
+•	Es como una "ventana" a los datos.
+
+•	Se actualiza automáticamente cuando cambian los datos originales.
+
+•	Es segura (puedes ocultar columnas sensibles).
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+2. Selección y Casting de Columnas:
+
+Columna 1: Vehicle ID
+
+sql:
+
+     CAST(vehicle_id AS STRING) AS vehicle_id
+
+¿Qué hace?
+
+•	CAST(vehicle_id AS STRING) → Convierte a STRING (texto).
+
+•	AS vehicle_id → Mantiene el mismo nombre.
+
+•	Propósito: Asegurar que sea texto (aunque ya lo era).
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+Columna 2: Road ID
+
+sql:
+
+     CAST(road_id AS STRING) AS road_id
+
+Similar: Asegura que sea STRING.
+________________________________________
+Columna 3: City Zone
+
+sql:
+
+     CAST(city_zone AS STRING) AS city_zone
+
+Similar: Asegura que sea STRING.
+________________________________________
+Columna 4: Speed (Velocidad)
+
+sql:
+
+     CAST(speed_int AS DOUBLE) AS speed
+
+¿Qué hace?
+
+•	CAST(speed_int AS DOUBLE) → Convierte a número decimal (doble precisión).
+
+•	AS speed → Renombra a speed (más claro que speed_int).
+
+•	Propósito: Permite cálculos precisos de promedio, sumas, etc.
+________________________________________
+Columna 5: Congestion Level
+
+sql:
+
+CAST(congestion_level AS INT) AS congestion_level
+
+¿Qué hace?
+
+•	CAST(...AS INT) → Convierte a entero.
+
+•	Propósito: Niveles de congestión son números enteros (1-5)
+________________________________________
+Columna 6: Event Time
+
+sql:
+
+     CAST(event_ts AS TIMESTAMP) AS event_time
+
+¿Qué hace?
+
+•	CAST(...AS TIMESTAMP) → Convierte a tipo fecha-hora.
+
+•	AS event_time → Renombra a event_time (más claro que event_ts).
+
+•	Propósito: Para análisis temporales y series de tiempo.
+________________________________________
+Columna 7: Peak Flag
+
+sql:
+
+     CAST(peak_flag AS STRING) AS peak_flag
+
+¿Qué hace?
+
+•	Convierte a STRING.
+
+•	Alternativa: Podría ser BOOLEAN (verdadero/falso).
+
+•	Nota: En tu código original era INT (1/0), ahora es STRING.
+________________________________________
+Columna 8: Speed Band
+
+sql:
+
+     CAST(speed_band AS STRING) AS speed_band
+
+Similar: Asegura que sea STRING (LOW/MEDIUM/HIGH).
+________________________________________
+Columna 9: Weather
+
+sql:
+
+     CAST(weather AS STRING) AS weather
+
+Similar: Asegura que sea STRING.
+________________________________________
+Columna 10: Event Date
+
+sql:
+
+     CAST(date AS DATE) AS event_date
+
+¿Qué hace?
+
+•	CAST(...AS DATE) → Convierte a tipo fecha (sin hora).
+
+•	AS event_date → Renombra a event_date (más descriptivo).
+
+•	Propósito: Agregaciones diarias, particionamiento, etc.
+________________________________________
+Columna 11: Event Hour
+
+sql:
+
+     CAST(hour AS INT) AS event_hour
+
+¿Qué hace?
+
+•	CAST(...AS INT) → Convierte a entero:
+
+•	AS event_hour → Renombra a event_hour (más claro).
+
+•	Propósito: Análisis por hora del día.
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+**🏗️ Fuente vs Vista**
+
+
+**Tabla Original (fact_traffic):**
+
++-------------+---------+-----------+----------+------------------+---------------------+----------+------------+---------+------------+------+
+| vehicle_id  | road_id | city_zone | speed_int | congestion_level | event_ts            | peak_flag | speed_band | weather | date       | hour |
++-------------+---------+-----------+----------+------------------+---------------------+----------+------------+---------+------------+------+
+| abc123      | R100    | CBD       | 45       | 3                | 2026-06-20 08:30:00 | 1        | MEDIUM     | CLEAR   | 2026-06-20 | 8    |
++-------------+---------+-----------+----------+------------------+---------------------+----------+------------+---------+------------+------+
+
+
+**Vista (bi_fact_traffic):*
+
++-------------+---------+-----------+-------+------------------+---------------------+----------+------------+---------+------------+------------+
+| vehicle_id  | road_id | city_zone | speed | congestion_level | event_time          | peak_flag | speed_band | weather | event_date | event_hour |
++-------------+---------+-----------+-------+------------------+---------------------+----------+------------+---------+------------+------------+
+| abc123      | R100    | CBD       | 45.0  | 3                | 2026-06-20 08:30:00 | 1        | MEDIUM     | CLEAR   | 2026-06-20 | 8          |
++-------------+---------+-----------+-------+------------------+---------------------+----------+------------+---------+------------+------------+
+
+
+**🎯 ¿Por qué usar CAST explícito?**
+
+1. Consistencia de Tipos:
+
+sql:
+
+     -- Sin CAST: tipos podrían variar
+     SELECT speed_int FROM fact_traffic  -- Podría ser String o Int
+
+     -- Con CAST: siempre DOUBLE
+     SELECT CAST(speed_int AS DOUBLE) FROM fact_traffic  -- Siempre número decimal
+
+
+2. Compatibilidad con Herramientas BI:
+   
+•	Tableau, Power BI, Looker esperan tipos específicos.
+
+•	Vista asegura que siempre reciben el tipo correcto.
+
+3. Rendimiento:
+
+•	Tipos explícitos ayudan al optimizador de consultas.
+
+•	Mejores planes de ejecución.
+
+4. Documentación:
+   
+•	Los nombres claros (event_time vs event_ts) documentan el propósito
+
+_______________________________________________________________________________________________
+
+**📊 Comparación: Tabla vs Vista**
+
+| Característica | Tabla (fact_traffic) | Vista (bi_fact_traffic) |
+|----------------|----------------------|-------------------------|
+| Almacenamiento | Físico en disco | Virtual (solo definición) |
+| Datos	| Datos reales | Datos de la tabla transformados |
+| Tipos | Mixtos (pueden ser genéricos) | Explícitos y consistentes |
+| Nombres | Técnicos (speed_int, event_ts) | Amigables (speed, event_time) |
+| Actualización | Por streams | Automática (al consultar) |
+| Rendimiento | Más rápido para lectura | Similar (consulta subyacente) |
+
+________________________________________________________________________________________________
+**🎯 Resumen Rápido**
+
+![Image](https://github.com/user-attachments/assets/55fcc526-5770-4755-8bb5-0c4875c4075d)
+
+•	Luego creamos las otras 2 vistas.
+
+Código:
+
+       CREATE OR REPLACE VIEW bi_dim_zone AS
+       SELECT
+       CAST(city_zone AS STRING) AS city_zone,
+       CAST(zone_type AS STRING) AS zone_type,
+       CAST(traffic_risk AS STRING) AS traffic_risk
+       FROM dim_zone;
+
+Código:
+
+       CREATE OR REPLACE VIEW bi_dim_road AS
+       SELECT
+       CAST(road_id AS STRING) AS road_id,
+       CAST(road_type AS STRING) AS road_type,
+       CAST(speed_limit AS INT) AS speed_limit
+       FROM dim_road;
+
+![Image](https://github.com/user-attachments/assets/6344d35e-9d0d-4050-8dcd-6d382f963271)
+
+Ahora salimos de la conexión con exit.
+
+![Image](https://github.com/user-attachments/assets/b71f8a79-d9dc-40e0-ad62-82ccd717299d)
+
+Luego cambiamos de directorio 
+
+Código:
+               
+		cd /opt/spark/jars
+
+![Image](https://github.com/user-attachments/assets/b23c50ea-afcb-423e-baa2-8ac7a19bdd6c)
+
+¿Qué hace?
+
+Cambia el directorio de trabajo actual a la carpeta /opt/spark/jars dentro del sistema.
+
+📌 Equivalente a: "Muévete a la carpeta donde Spark guarda sus librerías JAR"
+
+Código:
+
+        wget https://repo1.maven.org/maven2/io/delta/delta-spark_2.12/3.2.0/delta-spark_2.12-3.2.0.jar
+        wget https://repo1.maven.org/maven2/io/delta/delta-storage/3.2.0/delta-storage-3.2.0.jar
+
+
+¿Qué hace?
+
+Descarga los archivos JAR de Delta Lake desde el repositorio central de Maven y los guarda en el directorio actual.
+________________________________________
+Desglose Rápido:
+
+| Parte | Significado |
+|-------|-------------|
+| wget | Comando para descargar archivos desde internet |
+| repo1.maven.org | Repositorio central de Maven (donde están las librerías) |
+| delta-spark_2.12-3.2.0.jar | Librería principal de Delta Lake para Spark (versión 3.2.0, compilada para Scala 2.12) |
+| delta-storage-3.2.0.jar | Librería de almacenamiento de Delta (manejo de archivos) |
+
+________________________________________
+
+¿Para qué sirve?
+
+1.	Instalación manual de Delta Lake en Spark.
+2.	Evitar descargas repetidas con --packages.
+3.	Funciona sin internet (una vez descargados).
+4.	Mismo efecto que usar --packages io.delta:delta-spark_2.12:3.2.0
+
+
+código:
+
+        /opt/spark/sbin/start-thriftserver.sh \
+        --master spark://spark-master:7077 \
+        --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension \
+        --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
+        --conf spark.sql.catalogImplementation=hive \
+        --conf spark.hadoop.hive.metastore.uris=thrift://hive-metastore:9083 \
+        --conf spark.sql.warehouse.dir=/opt/spark/warehouse
+
+
+![Image](https://github.com/user-attachments/assets/feb26273-c5e6-4ac6-a289-3b06edf8fa03)
+
+**🎯 ¿Qué hace este comando?**
+
+Inicia el Thrift Server de Spark, que es un servidor JDBC/ODBC que permite que herramientas externas se conecten a Spark y ejecuten consultas SQL.
+
+📌 Equivalente a: "Convierte Spark en un servidor de base de datos al que me puedo conectar con cualquier herramienta BI."
+
+**📖 Desglose de Cada Parte**
+
+1. Script de inicio:
+
+Código:
+               
+		/opt/spark/sbin/start-thriftserver.sh
+
+Script que inicia el servidor Thrift de Spark.
+________________________________________
+2. Master del Cluster:
+
+Código:
+              
+		--master spark://spark-master:7077
+
+Conecta al cluster Spark para ejecutar las consultas.
+________________________________________
+3. Extensiones de Spark SQL:
+
+Código:
+
+        --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension
+
+Habilita comandos de Delta Lake (OPTIMIZE, MERGE, VACUUM, etc.)
+________________________________________
+4. Catálogo de Delta:
+
+Código:
+
+        --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog
+
+Usa el catálogo de Delta Lake para gestionar tablas.
+________________________________________
+5. Soporte Hive:
+
+Código:
+
+        --conf spark.sql.catalogImplementation=hive
+
+Usa el catálogo de Hive para metadatos.
+________________________________________
+6. Ubicación del Hive Metastore:
+
+Código:
+
+        --conf spark.hadoop.hive.metastore.uris=thrift://hive-metastore:9083
+
+Conecta al metastore de Hive para compartir metadatos entre herramientas.
+________________________________________
+7. Directorio del Warehouse:
+
+Código:
+
+        --conf spark.sql.warehouse.dir=/opt/spark/warehouse
+
+Dónde se almacenan las tablas físicamente.
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+### 📊 DASHBOARD - Power BI
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Comenzamos por abrir Power BI y, hacemos click en obtener datos y, en el buscador escribimos spark y seleccionamos.
+
+![Image](https://github.com/user-attachments/assets/571f8d23-137e-4536-8225-e587f9e868b9)
+
+Ahora usamos el nombre de nuestro servidor (localhost:10000) que tenemos definido en docker compose para conectar y, ponemos protocolo standard con modo de conectividad de datos DirectQuery.
+
+![Image](https://github.com/user-attachments/assets/cf880272-5524-40d7-a702-6a12c9b1e943)
+
+Luego creamos un usuario y contraseña, y por ultimo conectar.
+
+![Image](https://github.com/user-attachments/assets/eb375262-9c0d-4950-9832-2133f33a77b4)
+
+Y aquí solo podremos acceder a tablas y no a mesas.
+
+![Image](https://github.com/user-attachments/assets/69fcc073-176f-4bd5-93f9-132d50d5f0f2)
+
+Solo seleccionaremos las tres tablas y damos a cargar.
+
+![Image](https://github.com/user-attachments/assets/ba4646f5-f215-47c3-8322-9c63a012adb8)
+
+![Image](https://github.com/user-attachments/assets/4e66a472-d87a-4dd8-98a0-1d7f128b244e)
+
+Ahora vamos a la vista del modelo.
+
+![Image](https://github.com/user-attachments/assets/b033b346-1bf4-4885-a72a-8ea0a93cfec6)
+
+Ahora generaremos las relaciones entre tablas, para ello, seleccionamos city_zone y lo arrastramos hasta city_zone de la tabla de hechos y, los mismo con la otra tabla, seleccionamos road_id y lo arrastramos a road_id de la tabla hechos, esto generará una relación de uno a muchos.
+
+![Image](https://github.com/user-attachments/assets/16e34d52-b06c-4631-976f-086195f8ebe8)
+
+![Image](https://github.com/user-attachments/assets/baec29a7-ec4b-4879-9e61-a968a13068b1)
+
+![Image](https://github.com/user-attachments/assets/12195545-62f9-4600-b920-9989a022396b)
+
+![Image](https://github.com/user-attachments/assets/f346aee2-a039-43ca-b91d-5d5ce3381d59)
 
