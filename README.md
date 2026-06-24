@@ -304,9 +304,9 @@ ________________________________________________________________________________
 | Spark History	| http://localhost:18080	| Historial de aplicaciones |
 
 
-____________________________________________________________________________________________________________________________________________________________________________________________________________________________
-## 👨‍💻 Author
-____________________________________________________________________________________________________________________________________________________________________________________________________________________________
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+## 👨‍💻 Autor
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 **Allan Gonzales (All GoHer)**
 
@@ -323,9 +323,9 @@ LinkedIn: [  ]
 
 GitHub: [https://github.com/AllGoHer]
 
-____________________________________________________________________________________________________________________________________________________________________________________________________________________________
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
 ## 🧠 DESARROLLO DEL PROYECTO
-____________________________________________________________________________________________________________________________________________________________________________________________________________________________
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 ### 🚦Analisis del Trafico-en-Tiempo-Real
 
@@ -459,7 +459,8 @@ Código:
              KAFKA_CLUSTERS_0_NAME: local
              KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
 
-____________________________________________________________________________________________________________________________________________________________________________________________________________________________
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
 ### 📣Ahora paso a explicar el código del docker-compose por cada container creado.
 
 **1. HIVE METASTORE DATABASE (El Cerebro del sistema)**
@@ -487,9 +488,9 @@ ________________________________________________________________________________
 
 •	Los Volumes:
 
-   o	hive-site.xml: Sobreescribe el archivo de configuración nativo de Hive para que se conecte a tu PostgreSQL, o a un S3/MinIO si estás usando el optimizador de KRaft.
+          o	hive-site.xml: Sobreescribe el archivo de configuración nativo de Hive para que se conecte a tu PostgreSQL, o a un S3/MinIO si estás usando el optimizador de KRaft.
 
-   o	warehouse: Es la carpeta donde se guardan los datos reales si usaras Hive nativo. Aquí es donde Spark escribe los datos procesados.
+         o	warehouse: Es la carpeta donde se guardan los datos reales si usaras Hive nativo. Aquí es donde Spark escribe los datos procesados.
 
 •	**El nombre de la variable SERVICE_NAME: metastore: Es un identificador interno. En sistemas Hadoop clásicos, puedes tener varios Metastores (uno para desarrollo, otro para producción). Aquí tienes uno solo.
 
@@ -508,11 +509,11 @@ ________________________________________________________________________________
 
 •	Los Volumes:
 
-   o	warehouse: Comparte la carpeta de datos con los Workers. Si el Master necesita procesar algo, lo hace directamente en este directorio sin pasar por la red. A esto se le llama Compute o Shuffle I/O Local. Es extremadamente rápido.
+          o	warehouse: Comparte la carpeta de datos con los Workers. Si el Master necesita procesar algo, lo hace directamente en este directorio sin pasar por la red. A esto se le llama Compute o Shuffle I/O Local. Es extremadamente rápido.
 
-   o	apps: Donde pones tus scripts .py de Airflow o Scala.
+         o	apps: Donde pones tus scripts .py de Airflow o Scala.
 
-   o	spark-ivy: Almacena las dependencias de Java (la librería de Spark) de forma cacheada para no descargarlas cada vez que mandas un trabajo.
+         o	spark-ivy: Almacena las dependencias de Java (la librería de Spark) de forma cacheada para no descargarlas cada vez que mandas un trabajo.
 
 •	hostname: spark-master: Fija el nombre de la máquina. Los Workers lo usarán para conectarse al puerto 7077.
 
@@ -526,11 +527,11 @@ ________________________________________________________________________________
 
 •	Puertos del Worker:
 
-   o	4040: Puerto interno por si un trabajo se desborda.
+          o	4040: Puerto interno por si un trabajo se desborda.
 
-   o	10000: Puerto para el backend del Spark UI (si lo usas).
+          o	10000: Puerto para el backend del Spark UI (si lo usas).
 
-   o	8081: Puerto por defecto para métricas internas.
+          o	8081: Puerto por defecto para métricas internas.
 
 •	depends_on - spark-master: Un Worker no puede trabajar sin un Master vivo. Tiene que esperar a que el Master esté 100% arriba.
 
@@ -545,9 +546,9 @@ ________________________________________________________________________________
 
 •	Puertos:
 
-   o	9092: Usado para la comunicación interna entre los contenedores Spark.
+          o	9092: Usado para la comunicación interna entre los contenedores Spark.
 
-   o	29092: Expuesto a tu computadora local (host.docker.internal:29092) para que tus scripts de Python en Windows puedan leer o escribir en Kafka sin instalar Kafka en tu PC.
+          o	29092: Expuesto a tu computadora local (host.docker.internal:29092) para que tus scripts de Python en Windows puedan leer o escribir en Kafka sin instalar Kafka en tu PC.
 
 •	**CONTROLLER (Puerto 9093): Es un canal oculto que Kafka usa internamente para que los nodos se pongan de acuerdo en cuanto a quién es el "Jefe".
 
@@ -564,7 +565,7 @@ ________________________________________________________________________________
 
 •	**KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092: Le dice a la UI: "Para ver los tópicos, conéctate internamente al puerto interno de Kafka".
 
-____________________________________________________________________________________________________________________________________________________________________________________________________________________________
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 4.	En VSCode creamos la carpeta hive-conf y, dentro de ella creamos el archivo hive-site.xml ingresándole el siguiente código.
 
@@ -700,7 +701,8 @@ Código:
 
             time.sleep(random.uniform(0.5, 1.5))
 
-____________________________________________________________________________________________________________________________________________________________________________________________________________________________
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
 ### 🔥 Ahora paso a explicar el presente código.
 
 **📦 Imports y Configuración Inicial**
@@ -785,6 +787,7 @@ Este productor se usa típicamente para:
 ![image](https://github.com/user-attachments/assets/0c34327d-b0f4-4768-9e19-cda4a9dc8a93)
  
 Este código es excelente para entrenar sistemas de detección de anomalías y probar cómo reaccionan las aplicaciones ante datos impuros.
+
 
 🧠 ¿Qué pasa internamente en Kafka?
 
@@ -965,7 +968,7 @@ Ahora regresamos a la interface de usuario de Kafka para la verificación.
 
 
 ___________________________________________________________________________________________________________________________________________________________________________________________________________________________
-## ![Image](https://github.com/user-attachments/assets/5771a008-2cfb-42b1-82b6-e40cd70bcddf) CAPA DE BRONCE ([traffic_bronze.py]())
+## ![Image](https://github.com/user-attachments/assets/5771a008-2cfb-42b1-82b6-e40cd70bcddf) CAPA DE BRONCE ([traffic_bronze.py](https://github.com/AllGoHer/Trafico-en-Tiempo-Real/blob/main/apps/traffic_bronze.py))
 ___________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 
@@ -1286,6 +1289,7 @@ Antes:
 Después:
 
 | raw_json | kafka_timestamp | vehicle_id | road_id | speed | ...
+|----------|-----------------|------------|---------|-------|-
 
 
 #### 💾 ESCRITURA EN DELTA LAKE (BRONZE)
@@ -1360,6 +1364,1086 @@ Delta Lake (Guardar crudo + metadata = Bronze layer)
 
 
 ![Image](https://github.com/user-attachments/assets/3da30a1b-a632-490b-917f-91534d90d2c7)
+
+
+Luego regresamos a la terminal y retrocedemos una carpeta.
+
+Código:
+          
+		cd ..
+
+![Image](https://github.com/user-attachments/assets/014ec2ab-68be-4412-97e9-c84d6cbe62ac)
+
+Como las aplicaciones corren en docker pasaremos el siguiente comando para ejecutar el script de Spark.
+
+Código:
+
+        docker exec -it spark-worker /opt/spark/bin/spark-submit --conf spark.jars.ivy=/tmp/.ivy --packages io.delta:delta-spark_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 /opt/spark-apps/traffic_bronze.py
+
+### 🧠 Explicación del código.
+
+**🎯 VISIÓN GENERAL DEL COMANDO**
+
+Este comando hace lo siguiente:
+
+1.	Entra al contenedor spark-worker (que está corriendo en Docker).
+   
+2.	Ejecuta spark-submit (la herramienta para enviar trabajos a Spark).
+   
+3.	Configura dependencias (paquetes necesarios).
+   
+4.	Ejecuta tu script traffic_bronze.py
+
+
+**📖 DESGLOSE LÍNEA POR LÍNEA**
+
+1️⃣ docker exec -it spark-worker
+
+docker exec - Comando de Docker para ejecutar algo dentro de un contenedor ya corriendo.
+
+-i - Modo interactivo (mantiene STDIN abierto).
+
+-t - Asigna un pseudo-TTY (terminal) para que la salida sea legible.
+
+spark-worker - Nombre del contenedor donde quieres ejecutar el comando.
+
+📌 Equivalente a: "Abre una terminal dentro del contenedor spark-worker que está corriendo".
+
+2️⃣ /opt/spark/bin/spark-submit
+
+Ruta completa al ejecutable spark-submit dentro del contenedor.
+
+spark-submit es la herramienta principal para enviar trabajos a Spark. Es como el "lanzador" de aplicaciones Spark.
+
+¿Qué hace?
+
+•	Empaqueta tu aplicación
+
+•	La envía al cluster Spark
+
+•	Monitorea su ejecución
+
+
+📌 Equivalente a: "Ejecuta el lanzador de aplicaciones Spark".
+
+
+3️⃣ --conf spark.jars.ivy=/tmp/.ivy
+
+Configuración de Spark para el directorio Ivy (sistema de gestión de dependencias).
+
+--conf - Establece una configuración personalizada para esta ejecución.
+
+spark.jars.ivy=/tmp/.ivy - Especifica dónde Spark debe guardar las dependencias descargadas.
+
+📌 ¿Por qué es importante?
+
+•	Sin esto, Spark descargaría paquetes en /root/.ivy2/ (dentro del contenedor)
+
+•	Al usar /tmp/.ivy, puedes montar un volumen para compartir dependencias entre contenedores
+
+•	Esto acelera ejecuciones futuras (no descarga siempre lo mismo)
+
+
+4️⃣ --packages io.delta:delta-spark_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1
+
+Esta es la parte más importante. Descarga e incluye librerías externas necesarias. 
+
+Paquete 1: Delta Lake 
+
+io.delta:delta-spark_2.12:3.2.0                                                                                                                                                                                                                                   
+**Formato:** groupId:artifactId:version
+
+| Componente | Significado |
+|------------|-------------|
+| io.delta | Grupo (organización) |
+| delta-spark_2.12 | Nombre del artefacto (versión de Scala 2.12) |
+| 3.2.0	| Versión del paquete |
+
+**Paquete 2: Kafka Connector**
+
+Código:
+
+        org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1
+
+| Componente |  Significado |
+|------------|--------------|
+| org.apache.spark | Grupo Apache Spark |
+| spark-sql-kafka-0-10 | Conector Kafka para Spark SQL |
+| _2.12 |	Compilado para Scala 2.12 |
+| 3.5.1	| Versión de Spark |
+
+¿Qué hace este paquete?
+
+•	Permite leer/escribir desde/a Kafka
+
+•	Soporte para versiones de Kafka 0.10+
+
+•	Proporciona los formatos de lectura/escritura
+
+
+5️⃣ /opt/spark-apps/traffic_bronze.py
+
+/opt/spark-apps/traffic_bronze.py
+
+Ruta completa a tu script Python dentro del contenedor.
+
+/opt/spark-apps - Carpeta donde montaste tus aplicaciones (en el docker-compose).
+
+traffic_bronze.py - Tu archivo Python con el pipeline de streaming.
+
+📌 Equivalente a: "Ejecuta este script con el cluster Spark".
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+**🔄 FLUJO COMPLETO DE EJECUCIÓN**
+
+1. docker exec -it spark-worker
+   ↓ (entra al contenedor)
+   
+2. /opt/spark/bin/spark-submit
+   ↓ (ejecuta el lanzador)
+   
+3. --conf spark.jars.ivy=/tmp/.ivy
+   ↓ (configura directorio de caché)
+   
+4. --packages io.delta:...,org.apache.spark:...
+   ↓ (descarga dependencias)
+   
+5. /opt/spark-apps/traffic_bronze.py
+   ↓ (ejecuta tu script)
+
+
+
+![Image](https://github.com/user-attachments/assets/dc9377b7-0426-49f6-b124-a153f445d7e0)
+
+Ahora abrimos otra terminal para volver a ejecutar el archivo traffic_dirty_producer. Así es que, primero ingresamos a nuestra carpeta principal.
+
+Código:
+
+        Cd Real_Time_Traffic
+
+Segundo ingresamos a la carpeta producer
+
+Código:
+
+        Cd producer
+
+Tercero, corremos la carpeta traffic_dirty_producer.
+
+Código:
+
+        Python traffic_dirty_producer.py
+ 
+
+![Image](https://github.com/user-attachments/assets/c05cbd0d-7517-4387-8b59-a9ef78fa5077)
+
+Ahora para verificar si se ejcuto bien, vamos a revisar que en la carpeta warehouse de VSCode se encuentre las otras 2 subcarpetas chk\traffic_bronze y traffic_bronze donde se este generando los archivos parquet de datos en DELTA_LOG
+
+![Image](https://github.com/user-attachments/assets/2236b211-0ecd-4406-9054-c2fbe1032a52)
+
+Y también verificaremos la transmisión en el Spark Master UI
+
+![Image](https://github.com/user-attachments/assets/d47e1db9-1df9-40dd-957d-00d65677926e)
+
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+## ![Image](https://github.com/user-attachments/assets/a2162002-b311-448a-a4f2-c9fb204fe1d8) CAPA DE PLATA
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Código:
+
+        from pyspark.sql import SparkSession
+        from pyspark.sql.functions import *
+        from pyspark.sql.types import *
+
+        # Spark Session Config
+
+        spark = (
+            SparkSession.builder
+            .appName("TrafficSilverLayer")
+            # cluster master
+            .master("spark://spark-master:7077")
+            # delta lake
+            .config("spark.sql.extensions",
+                    "io.delta.sql.DeltaSparkSessionExtension")
+            .config("spark.sql.catalog.spark_catalog",
+                    "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+            .enableHiveSupport()
+            .getOrCreate()
+        )
+
+        spark.sparkContext.setLogLevel("WARN")
+
+        # Read Bronze Stream
+
+        bronze_df = (
+            spark.readStream
+            .format("delta")
+            .load("/opt/spark/warehouse/traffic_bronze")
+        )
+
+        # Data Quality Flag
+
+        dq_df = bronze_df.withColumn(
+            "dq_flag",
+            when(col("vehicle_id").isNull(), "MISSING_VEHICLE")
+            .when(col("event_time").isNull(), "MISSING_TIME")
+            .when(col("raw_json").contains("CORRUPTED"), "CORRUPT_JSON")
+            .otherwise("OK")
+        )
+
+        # Safe Type Casting
+
+        typed = dq_df.withColumn(
+            "speed_int",
+            col("speed").cast("int")
+        ).withColumn(
+            "event_ts",
+            to_timestamp("event_time")
+        )
+
+        # Business Validation Rules
+
+        validated = typed.withColumn(
+            "speed_valid",
+            when((col("speed_int") >= 0) & (col("speed_int") <= 160), 1).otherwise(0)
+        ).withColumn(
+            "time_valid",
+            when(col("event_ts") <= current_timestamp() + expr("INTERVAL 10 MINUTES"), 1).otherwise(0)
+        )
+
+        # Filter Good Records
+
+        clean_stream = validated.filter(
+            (col("dq_flag") == "OK") &
+            (col("speed_valid") == 1) &
+            (col("time_valid") == 1)
+        )
+
+        # Handle Late Data
+
+        watermarked = clean_stream.withWatermark("event_ts", "15 minutes")
+
+        # Deduplication
+
+        deduped = watermarked.dropDuplicates(
+            ["vehicle_id", "event_ts"]
+        )
+
+        # Feature Engineering
+
+        silver_final = (
+            deduped
+            .withColumn("hour", hour("event_ts"))
+            .withColumn("peak_flag",
+                when((col("hour").between(8,11)) | 
+                (col("hour").between(17,20)), 1).otherwise(0))
+            .withColumn("speed_band",
+                when(col("speed_int") <30, "LOW")
+                .when(col("speed_int") < 70, "MEDIUM")
+                .otherwise("High"))
+        )
+        # Write Silver Table
+
+        silver_query = (
+            silver_final.writeStream
+            .format("delta")
+            .outputMode("append")
+            .option("checkpointLocation", "/opt/spark/warehouse/chk/traffic_silver")
+            .option("path", "/opt/spark/warehouse/traffic_silver")
+            .start()
+        )
+
+        spark.streams.awaitAnyTermination()
+
+
+### 🧠 EXPLICACIÓN DEL CÓDIGO
+
+📦 IMPORTS - Librerías necesarias
+
+![Image](https://github.com/user-attachments/assets/e0568aa2-18bc-4324-99e4-3714751e5e49)
+
+Importa SparkSession y todas las funciones y tipos de Spark SQL:
+
+•	SparkSession - Punto de entrada para Spark.
+
+•	col() - Referencia a columnas.
+
+•	when() - Condicional (como IF en SQL).
+
+•	to_timestamp() - Conversión a timestamp.
+
+•	hour() - Extrae la hora de un timestamp.
+
+•	current_timestamp() - Timestamp actual.
+
+
+#### 🚀 CONFIGURACIÓN DE SPARK SESSION
+
+![Image](https://github.com/user-attachments/assets/93731c63-3404-4473-9d53-213a33f3e670)
+
+Crea una SparkSession para la capa Silver:
+
+•	appName("TrafficSilverLayer") - Identifica la aplicación en la UI de Spark.
+
+![Image](https://github.com/user-attachments/assets/a43ce1f4-2970-4191-8f24-fae17b59020c)
+
+Conecta al cluster Spark en el puerto 7077 del master.
+
+![Image](https://github.com/user-attachments/assets/4b2afcf9-56ad-4d05-a812-3699eaf4c789)
+
+•	.config(...): Las dos líneas configuran las extensiones de Delta Lake, igual que en el código anterior, imprescindibles para leer y escribir en formato Delta.
+
+•	DeltaSparkSessionExtension - Funcionalidades extra de Delta (MERGE, OPTIMIZE, etc.)
+
+•	DeltaCatalog - Reemplaza el catálogo de Spark para manejar tablas Delta.
+
+![Image](https://github.com/user-attachments/assets/bb904e11-65ce-4088-98db-39d430dc6b0e)
+
+* Habilita Hive Metastore para que las tablas sean accesibles desde Hive.
+
+![Image](https://github.com/user-attachments/assets/80a168c4-e5d7-433e-afc4-9ad004100825)
+
+•	.getOrCreate(): Crea la sesión (o la recupera si ya existe una con ese nombre).
+
+![Image](https://github.com/user-attachments/assets/71cb5f9c-f38a-4cdc-9766-bfe01a90d21e)
+
+•	Configura los logs para que solo muestre advertencias (WARN) y errores, ignorando la infinidad de logs de INFO que genera Spark en segundo plano.
+
+
+**📡 LECTURA DEL STREAM BRONZE**
+
+Código:
+
+        bronze_df = (
+            spark.readStream
+            .format("delta")
+            .load("/opt/spark/warehouse/traffic_bronze")
+        )
+
+•	spark.readStream: Indica que vamos a hacer una lectura en tiempo real (streaming).
+
+•	.format("delta"): La magia de Delta Lake. En lugar de leer de Kafka, leemos directamente de la tabla Bronze que creamos en el código anterior.
+
+•	.load(...): Spark monitorizará ese directorio. Cada vez que el trabajo de Bronze escriba un nuevo archivo, este trabajo de Silver lo detectará y lo leerá al instante.
+
+•	Resultado: Un DataFrame de streaming que se actualiza con cada nuevo archivo en Bronze
+
+📌 Diferencia clave: El productor escribe en Bronze, y este script detecta automáticamente los nuevos archivos y los procesa.
+
+**🏷️ DATA QUALITY FLAG (Bandera de Calidad)**
+
+Código:
+
+        dq_df = bronze_df.withColumn(
+            "dq_flag",
+            when(col("vehicle_id").isNull(), "MISSING_VEHICLE")
+            .when(col("event_time").isNull(), "MISSING_TIME")
+            .when(col("raw_json").contains("CORRUPTED"), "CORRUPT_JSON")
+            .otherwise("OK")
+        )
+
+•	withColumn("dq_flag", ...): Crea una nueva columna para etiquetar la calidad de cada fila.
+
+•	when(col("vehicle_id").isNull(), "MISSING_VEHICLE"): Si no hay ID de vehículo, le asigna la etiqueta "MISSING_VEHICLE".
+
+•	.when(col("event_time").isNull(), "MISSING_TIME"): Si no hay marca de tiempo, le asigna "MISSING_TIME".
+
+•	.when(col("raw_json").contains("CORRUPTED"), "CORRUPT_JSON"): Si el texto original contiene la palabra "CORRUPTED" (asumiendo que el sistema emisor así lo marca), le asigna "CORRUPT_JSON".
+
+•	.otherwise("OK"): Si no cumple ninguna de las malas condiciones, la fila está bien ("OK").
+
+📌 Propósito: Marcar registros problemáticos para saber qué datos están sucios y por qué.
+
+
+**🔢 CONVERSIÓN SEGURA DE TIPOS (SAFE CASTING)**
+
+Código:
+
+        typed = dq_df.withColumn(
+            "speed_int",
+            col("speed").cast("int")
+        ).withColumn(
+            "event_ts",
+            to_timestamp("event_time")
+        )
+
+•	withColumn("speed_int", col("speed").cast("int")): En la capa Bronze, la velocidad era un String (texto). Aquí se convierte a entero (int). Es seguro: si el texto fuera "N/A", el .cast("int") no hará explotar el código, simplemente pondrá un null en esa fila.
+
+•	.withColumn("event_ts", to_timestamp("event_time")): Convierte la cadena de texto del tiempo (ej. "2023-10-25 15:30:00") a un verdadero objeto tipo Timestamp de Spark, necesario para hacer cálculos de tiempo después.
+
+**✅ REGLAS DE VALIDACIÓN DE NEGOCIO**
+
+Código:
+
+        validated = typed.withColumn(
+            "speed_valid",
+            when((col("speed_int") >= 0) & (col("speed_int") <= 160), 1).otherwise(0)
+        )
+
+
+Valida que la velocidad esté en un rango lógico:
+
+•	Condición: speed_int entre 0 y 160 km/h.
+
+•	Si se cumple → 1 (válido).
+
+•	Si no se cumple → 0 (inválido).
+
+•	when((col("speed_int") >= 0) & (col("speed_int") <= 160), 1).otherwise(0): Regla de negocio: un coche no puede ir a velocidad negativa, ni a más de 160 km/h. Si está fuera de ese rango, es 0.
+
+
+Código:
+
+        .withColumn(
+            "time_valid",
+            when(col("event_ts") <= current_timestamp() + expr("INTERVAL 10 MINUTES"), 1).otherwise(0)
+        )
+
+Valida que el timestamp no sea del futuro:
+
+•	current_timestamp() - Fecha/hora actual.
+
+•	+ expr("INTERVAL 10 MINUTES") - Permite hasta 10 minutos en el futuro.
+
+•	Condición: event_ts <= ahora + 10 minutos.
+
+•	Si se cumple → 1 (válido).
+
+•	Si no se cumple → 0 (inválido).
+
+•	when(col("event_ts") <= current_timestamp() + expr("INTERVAL 10 MINUTES"), 1).otherwise(0): Regla de negocio: el tiempo del evento no puede estar más de 10 minutos en el futuro (esto detecta errores de reloj en los sensores GPS de los coches). Si el evento dice que ocurre dentro de más de 10 minutos, se marca como inválido (0).
+
+**📌 Propósito:** Filtrar datos anómalos (velocidades extremas o fechas futuras).
+
+
+**🧹 FILTRADO DE REGISTROS BUENOS**
+
+Código:
+
+        clean_stream = validated.filter(
+            (col("dq_flag") == "OK") &
+            (col("speed_valid") == 1) &
+            (col("time_valid") == 1)
+        )
+
+
+•	.filter(...): Aquí es donde se descarta la basura. Solo dejan pasar las filas que pasaron las tres pruebas:
+
+| Condición | Significado |
+|-----------|-------------|
+| dq_flag == "OK" |	No hay problemas de calidad (ID válido, timestamp presente, no corrupto) |
+| speed_valid == 1 | Velocidad en rango lógico (0-160 km/h) |
+| time_valid == 1 | Fecha no es futura (dentro de margen de 10 min) |
+| Resultado: | Solo datos limpios y válidos pasan a la siguiente etapa. |
+
+
+**⏰ MANEJO DE DATOS TARDÍOS (Watermark)**
+
+Código:
+
+         watermarked = clean_stream.withWatermark("event_ts", "15 minutes")
+		 
+
+•	.withWatermark("event_ts", "15 minutes"): En streaming, los datos llegan desordenados (un evento de las 8:00 puede llegar a las 8:20 por problemas de red). Esto le dice a Spark: "Establece una marca de agua de 15 minutos sobre la columna event_ts". Esto permite que Spark limpie su memoria interna y sepa cuándo un dato ha llegado demasiado tarde para ser procesado en agregaciones temporales.
+
+
+**🗑️ DEDUPLICACIÓN**
+
+Código:
+
+        deduped = watermarked.dropDuplicates(
+            ["vehicle_id", "event_ts"]
+        )
+
+•	.dropDuplicates(["vehicle_id", "event_ts"]): Si por algún motivo (reintentos de red, micro-batches superpuestos) el mismo coche (vehicle_id) envía dos veces el evento exactamente en el mismo segundo (event_ts), esta línea elimina el duplicado, dejando solo uno.
+
+•	**Nota técnica:** En streaming, dropDuplicates requiere obligatoriamente que se haya definido un <mark>withWatermark</mark> antes, de lo contrario Spark lanzará un error, porque necesita saber cuándo puede olvidar los eventos antiguos en su memoria.
+
+
+**🎨 INGENIERÍA DE CARACTERÍSTICAS (Feature Engineering)**
+
+Código:
+
+        silver_final = (
+            deduped
+            .withColumn("hour", hour("event_ts"))
+        )
+
+Extrae la hora del timestamp:
+
+•	hour("event_ts") - Obtiene la hora (0-23) del timestamp.
+
+•	Útil para análisis por hora del día.
+
+
+![Image](https://github.com/user-attachments/assets/f4824d98-ee1b-49a0-be31-58942e70e368)
+
+Identifica horas pico:
+
+•	Horas pico: 8-11 AM y 5-8 PM (hora laboral).
+
+•	between(8,11) - Incluye 8, 9, 10, 11.
+
+•	between(17,20) - Incluye 17, 18, 19, 20.
+
+•	1 = Horario pico, 0 = Fuera de pico.
+
+![Image](https://github.com/user-attachments/assets/281616be-97b6-4d47-99cc-0dd54c92c395)
+
+Categoriza la velocidad en bandas:
+
+•	< 30 km/h → "LOW" (tráfico lento/congestión).
+
+•	30-70 km/h → "MEDIUM" (flujo normal).
+
+•	>= 70 km/h → "High" (tráfico fluido).
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+**💾 ESCRITURA EN SILVER (Capa Limpia)**
+
+Código:
+
+        silver_query = (
+            silver_final.writeStream
+            .format("delta")
+            .outputMode("append")
+            .option("checkpointLocation", "/opt/spark/warehouse/chk/traffic_silver")
+            .option("path", "/opt/spark/warehouse/traffic_silver")
+            .start()
+         )
+		 
+•	silver_final.writeStream: Inicia la escritura del stream resultante.
+
+•	.format("delta"): Lo guarda en formato Delta Lake.
+
+•	.outputMode("append"): Como estamos filtrando filas y no haciendo agregaciones (como sumas o promedios), usamos "append" (añadir las filas limpias nuevas).
+
+•	.option("checkpointLocation", ...): Vital. Guarda el progreso en una ruta diferente a la del Bronze para que este trabajo sea independiente y tolerante a fallos.
+
+•	.option("path", ...): Ruta física donde quedarán guardados los datos ya limpios y enriquecidos (la tabla Silver).
+
+•	.start(): Dispara la ejecución en segundo plano.
+
+
+**🔥 MANTENER EL PROCESO VIVO**
+
+Código:
+
+        spark.streams.awaitAnyTermination()
+
+
+Espera indefinidamente hasta que el stream termine o sea detenido.
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+**📊 FLUJO DE TRANSFORMACIONES**
+
+
+Bronze Data
+    ↓ [Data Quality Flag]
+MISSING_VEHICLE | MISSING_TIME | CORRUPT_JSON | OK
+    ↓ [Type Casting]
+speed_int (int) | event_ts (timestamp)
+    ↓ [Business Rules]
+speed_valid (0/1) | time_valid (0/1)
+    ↓ [Filter]
+Solo registros con: dq_flag=OK, speed_valid=1, time_valid=1
+    ↓ [Watermark]
+Datos tardíos > 15 min son descartados
+    ↓ [Deduplication]
+Elimina duplicados por (vehicle_id, event_ts)
+    ↓ [Feature Engineering]
+hour | peak_flag | speed_band
+    ↓
+Silver Data (Limpio y Enriquecido)
+
+
+
+* Ahora volviendo al proceso de ejecución,regresamos a la terminal y corremos el siguiente código.
+  
+Código:
+
+         docker exec -it spark-worker /opt/spark/bin/spark-submit --conf spark.jars.ivy=/tmp/.ivy --packages io.delta:delta-spark_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 /opt/spark-apps/traffic_silver.py
+
+![Image](https://github.com/user-attachments/assets/97e6ea30-3916-433a-af68-38b686f20fae)
+
+Luego verificamos que se esté ejecutando en VSC la carpeta traffic_silver/_delta_log.
+
+![Image](https://github.com/user-attachments/assets/62b52dff-9183-4a69-9acc-053b724f6027)
+
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+###  ![Imagen](https://github.com/user-attachments/assets/4d8e0754-1ce5-4252-9586-f1762341f26b) CAPA DE ORO / GOLDEN LAYER
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Código:
+
+        from pyspark.sql import SparkSession
+        from pyspark.sql.functions import *
+
+        # Spark Session Config
+
+        spark = (
+            SparkSession.builder
+            .appName("TrafficGoldLayer")
+            # cluster master
+            .master("spark://spark-master:7077")
+            # delta lake
+            .config("spark.sql.extensions",
+                    "io.delta.sql.DeltaSparkSessionExtension")
+            .config("spark.sql.catalog.spark_catalog",
+                    "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+            .enableHiveSupport()
+            .getOrCreate()
+        )
+
+        spark.sparkContext.setLogLevel("WARN")
+
+        # Read Silver Silver
+
+        silver_stream = (
+            spark.readStream
+            .format("delta")
+            .load("/opt/spark/warehouse/traffic_silver")
+        )
+
+        # Dimension Zone
+
+        dim_zone = silver_stream.select(
+            "city_zone"
+        ).dropDuplicates() \
+        .withColumn(
+            "zone_type",
+            when(col("city_zone") == "CBD", "Commercial")
+            .when(col("city_zone") == "TECHPARK", "IT HUB")
+            .when(col("city_zone").isin("AIRPORT", "TRAINSTATION"), "Transit Hub")
+            .otherwise("Residential")
+        ) \
+        .withColumn(
+            "traffic_risk",
+            when(col("city_zone").isin("CBD", "AIRPORT", "TRAINSTATION"), "HIGH")
+            .when(col("city_zone") == "TECHPARK", "MEDIUM")
+            .otherwise("LOW")
+        )
+
+        zone_query = (
+            dim_zone.writeStream
+            .format("delta")
+            .outputMode("append")
+            .option("checkpointLocation", "/opt/spark/warehouse/chk/dim_zone")
+            .option("path", "/opt/spark/warehouse/dim_zone")
+            .start()
+        )
+
+        # Dimesion Road
+
+        dim_road = silver_stream.select(
+            "road_id"
+        ).dropDuplicates() \
+        .withColumn(
+            "road_type" ,
+            when(col("road_id").isin("R100", "R200"), "Highway")
+            .otherwise("City Road")
+        ) \
+        .withColumn(
+             "speed_limit",
+             when(col("road_id").isin("R100", "R200"), 100)
+            .otherwise(60)
+        )
+
+        road_query = (
+            dim_road.writeStream
+            .format("delta")
+            .outputMode("append")
+            .option("checkpointLocation", "/opt/spark/warehouse/chk/dim_road")
+            .option("path", "/opt/spark/warehouse/dim_road")
+            .start()
+        )
+
+        # Fact Table
+
+        fact_stream = silver_stream.select(
+            "vehicle_id",
+            "road_id",
+            "city_zone",
+            "speed_int",
+            "congestion_level",
+            "event_ts",
+            "peak_flag",
+            "speed_band",
+            "hour",
+            "weather"
+        )
+
+        fact_enriched = fact_stream.withColumn("date", to_date("event_ts"))
+
+        fact_query = (
+            fact_enriched.writeStream
+            .format("delta")
+            .outputMode("append")
+            .option("checkpointLocation", "/opt/spark/warehouse/chk/fact_traffic")
+            .option("path", "/opt/spark/warehouse/fact_traffic")
+            .start()
+        )
+
+        spark.streams.awaitAnyTermination()
+
+
+### 🧠 Explicación del código.
+
+Les explico este código línea por línea. Es un pipeline de streaming en Spark que construye una capa Gold siguiendo el modelo estrella (Star Schema) con dimensiones y una tabla de hechos para análisis de tráfico.
+
+
+📦 IMPORTS - Librerías necesarias
+
+
+Código:
+
+
+        from pyspark.sql import SparkSession
+        from pyspark.sql.functions import *
+
+Importa SparkSession y todas las funciones de Spark SQL:
+
+•	SparkSession - Punto de entrada para Spark.
+
+•	col() - Referencia a columnas.
+
+•	when() - Condicional (IF en SQL).
+
+•	isin() - Verifica si un valor está en una lista.
+
+•	to_date() - Convierte a fecha.
+
+•	dropDuplicates() - Elimina duplicados.
+
+Nota: No importa types porque no se definen esquemas explícitos.
+
+
+**🚀 CONFIGURACIÓN DE SPARK SESSION**
+
+
+Código:
+
+        spark = (
+            SparkSession.builder
+            .appName("TrafficGoldLayer")
+            .master("spark://spark-master:7077")
+            .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+            .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+            .enableHiveSupport()
+            .getOrCreate()
+        )
+        spark.sparkContext.setLogLevel("WARN")
+
+
+•	Es la misma configuración de clúster y Delta Lake que en las capas anteriores. El único cambio es el .appName("TrafficGoldLayer") para identificar este proceso específico en la interfaz de monitoreo.
+
+
+**📡 LECTURA DE LA CAPA SILVER**
+
+Código:
+
+        silver_stream = (
+            spark.readStream
+            .format("delta")
+            .load("/opt/spark/warehouse/traffic_silver")
+        )
+
+•	Inicia la lectura en tiempo real desde la tabla Silver que creamos en el código anterior. Spark vigilará esta carpeta para procesar los datos limpios a medida que llegan.
+Lee los datos limpios de la capa Silver como un stream continuo:
+
+•	spark.readStream - Lectura en streaming.
+
+•	.format("delta") - Fuente en formato Delta Lake.
+
+•	.load("/opt/spark/warehouse/traffic_silver") - Ruta donde está la tabla Silver.
+
+**📌 Importante:** Este script detecta automáticamente nuevos datos en Silver y los procesa en tiempo real para construir la capa Gold.
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+🏗️ ARQUITECTURA STAR SCHEMA (Modelo Estrella)
+
+Este código construye un modelo estrella típico de data warehousing:
+
+![Image](https://github.com/user-attachments/assets/c4fcc769-4b66-4c1b-ad16-f7e1a4504703)
+
+Componentes:
+
+1.	Tablas de Dimensión (dim_zone, dim_road) - Atributos descriptivos.
+   
+2.	Tabla de Hechos (fact_traffic) - Mediciones y métricas.
+   
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+**🏙️ DIMENSIÓN 1: ZONA (dim_zone)**
+
+Código:
+
+        dim_zone = silver_stream.select(
+            "city_zone"
+        ).dropDuplicates()
+
+•	.select("city_zone"): Selecciona únicamente la columna de la zona de la ciudad.
+
+•	.dropDuplicates(): Como muchos vehículos estarán en la misma zona al mismo tiempo, esto asegura que nuestra tabla de dimensiones solo tenga una fila por zona única.
+
+**📌 Resultado:** Lista única de zonas: ["CBD", "AIRPORT", "TECHPARK", "SUBURB", "TRAINSTATION"]
+
+
+Código:
+
+        .withColumn(
+            "zone_type",
+            when(col("city_zone") == "CBD", "Commercial")
+            .when(col("city_zone") == "TECHPARK", "IT HUB")
+            .when(col("city_zone").isin("AIRPORT", "TRAINSTATION"), "Transit Hub")
+            .otherwise("Residential")
+         )
+
+* Crea una nueva columna categorizando el tipo de zona basándose en reglas de negocio.
+  
+Clasifica cada zona según su propósito:
+
+| Zona | Tipo |
+|------|------|
+| CBD  | "Commercial" (Comercial) |
+| TECHPARK | "IT HUB" (Centro tecnológico) |
+| AIRPORT, TRAINSTATION | "Transit Hub" (Nodo de transporte) |
+| Otras (ej: "SUBURB") | "Residential" (Residencial) |
+
+
+Añadir columna traffic_risk (Riesgo de Tráfico)
+
+Código:
+
+        .withColumn(
+             "traffic_risk",
+             when(col("city_zone").isin("CBD", "AIRPORT", "TRAINSTATION"), "HIGH")
+            .when(col("city_zone") == "TECHPARK", "MEDIUM")
+            .otherwise("LOW")
+        )
+
+•	Crea otra columna de negocio que asigna un nivel de riesgo de tráfico a cada zona. 
+
+
+Asigna nivel de riesgo de congestión:
+
+
+| Zona | Riesgo |
+|------|--------|
+| CBD, AIRPORT, TRAINSTATION | "HIGH" (Alto - zonas concurridas) |
+| TECHPARK | "MEDIUM" (Medio) |
+| Otras (ej: "SUBURB") | "LOW" (Bajo) |
+
+
+Escribir dimensión dim_zone
+
+Código:
+
+        zone_query = (
+            dim_zone.writeStream
+            .format("delta")
+            .outputMode("append")
+            .option("checkpointLocation", "/opt/spark/warehouse/chk/dim_zone")
+            .option("path", "/opt/spark/warehouse/dim_zone")
+            .start()
+        )
+
+Guarda la dimensión zona en Delta Lake:
+
+•	Formato: Delta Lake.
+
+•	Modo: Append (añadir nuevas zonas).
+
+•	Checkpoint: /opt/spark/warehouse/chk/dim_zone (para recuperación).
+
+•	Ruta: /opt/spark/warehouse/dim_zone.
+
+
+**📌 Resultado de dim_zone:**
+
+| city_zone | zone_type | traffic_risk |
+|-----------|-----------|--------------|
+| CBD |	Commercial | HIGH |
+| AIRPORT | Transit Hub | HIGH |
+| TECHPARK | IT HUB | MEDIUM |
+| SUBURB | Residential | LOW |
+| TRAINSTATION | Transit Hub | HIGH |
+
+•	.start() arranca este primer micro-proceso en segundo plano. Se guarda en la variable zone_query para que Spark lo mantenga vivo.
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+**🛣️ DIMENSIÓN 2: CARRETERA (dim_road)**
+
+Código:
+
+        dim_road = silver_stream.select(
+            "road_id"
+        ).dropDuplicates()
+
+Selecciona y limpia los IDs de carreteras:
+
+•	select("road_id") - Solo la columna road_id.
+
+•	.dropDuplicates() - Lista única de carreteras.
+
+**📌 Resultado: Lista única: ["R100", "R200", "R300", "R400"]**
+
+
+
+Añadir columna road_type (Tipo de Carretera)
+
+
+Código:
+
+        .withColumn(
+            "road_type",
+            when(col("road_id").isin("R100", "R200"), "Highway")
+            .otherwise("City Road")
+        )
+
+
+Clasifica carreteras según su tipo:
+
+•	R100, R200 → "Highway" (Autopista).
+
+•	R300, R400 → "City Road" (Vía urbana).
+
+
+Añadir columna speed_limit (Límite de Velocidad).
+
+Código:
+
+        .withColumn(
+            "speed_limit",
+            when(col("road_id").isin("R100", "R200"), 100)
+            .otherwise(60)
+         )
+
+Asigna límite de velocidad por tipo de vía:
+
+•	R100, R200 → 100 km/h (autopista).
+
+•	R300, R400 → 60 km/h (vía urbana).
+
+
+Escribir dimensión dim_road
+
+Código:
+
+        road_query = (
+            dim_road.writeStream
+            .format("delta")
+            .outputMode("append")
+            .option("checkpointLocation", "/opt/spark/warehouse/chk/dim_road")
+            .option("path", "/opt/spark/warehouse/dim_road")
+            .start()
+        )
+
+
+Guarda la dimensión carretera en Delta Lake.
+
+**📌 Resultado de dim_road:**
+
+| road_id | road_type | speed_limit |
+|---------|-----------|-------------|
+| R100 | Highway | 100 |
+| R200 | Highway | 100 |
+| R300 | City Road | 60 |
+| R400 | City Road | 60 |
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+**📊 TABLA DE HECHOS (fact_traffic)**
+
+Código:
+
+        fact_stream = silver_stream.select(
+            "vehicle_id",
+            "road_id",
+            "city_zone",
+            "speed_int",
+            "congestion_level",
+            "event_ts",
+            "peak_flag",
+            "speed_band",
+            "hour",
+            "weather"
+        )
+
+Selecciona las columnas relevantes de Silver para la tabla de hechos:
+
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| vehicle_id | String | ID del vehículo |
+| road_id | String | ID de la carretera (clave foránea) |
+| city_zone | String | Zona (clave foránea) |
+| speed_int | Integer | Velocidad en km/h |
+| congestion_level | Integer | Nivel de congestión (1-5) |
+| event_ts | Timestamp | Fecha y hora del evento |
+| peak_flag | Integer | 1=Hora pico, 0=Fuera de pico |
+| speed_band | String | LOW/MEDIUM/HIGH |
+| hour | Integer | Hora del día (0-23) |
+| weather |	String | Condición climática |
+
+
+Añadir columna date (Fecha)
+
+Código:
+
+        fact_enriched = fact_stream.withColumn("date", to_date("event_ts"))
+
+
+Extrae la fecha del timestamp:
+
+•	to_date("event_ts") - Convierte timestamp a solo fecha.
+
+•	Útil para agregaciones diarias (ej: tráfico por día).
+
+📌 Ejemplo: event_ts = "2026-06-20 15:30:45" → date = "2026-06-20"
+
+___________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Escribir tabla de hechos fact_traffic
+
+Código:
+
+        fact_query = (
+            fact_enriched.writeStream
+            .format("delta")
+            .outputMode("append")
+            .option("checkpointLocation", "/opt/spark/warehouse/chk/fact_traffic")
+            .option("path", "/opt/spark/warehouse/fact_traffic")
+            .start()
+        )
+
+Guarda la tabla de hechos en Delta Lake.
+
+**📌 Resultado de fact_traffic:**
+
+![Image](https://github.com/user-attachments/assets/c33ce119-2985-4f1e-ad8b-03df803db1c8)
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
+
+![Image]()
 
 ![Image]()
 
